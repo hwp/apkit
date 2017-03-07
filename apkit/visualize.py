@@ -32,14 +32,14 @@ def spectrogram(fs, tf, hop_size):
     """
     fig = plt.figure()
 
-    vmax = np.max(np.abs(tf))
+    vmax = np.percentile(np.abs(tf), 99)
     for i, c in enumerate(tf):
         sp = fig.add_subplot(len(tf), 1, i+1)
         _, nfft = c.shape
         ny = nfft / 2 + 1
         im = sp.imshow(np.abs(c[:,:ny]).T, vmin=0, vmax=vmax,
-                       interpolation='none', aspect='auto', origin='lower')
-        '''cmap=plt.cm.YlOrRd,'''
+                       cmap=plt.cm.YlOrRd, interpolation='none',
+                       aspect='auto', origin='lower')
         l = len(c) * hop_size / fs
         plt.xticks(np.arange(l + 1) * fs / hop_size,
                    [str(1.0 * t) for t in xrange(l + 1)])
