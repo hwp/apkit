@@ -8,6 +8,7 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
 import numpy as np
+from itertools import izip
 
 def gcc_phat(x, y):
     """GCC-PHAT
@@ -20,8 +21,8 @@ def gcc_phat(x, y):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    r = x * y.conj()
-    return np.real(np.fft.ifft(r / np.abs(r)))
+    cpsd = x * y.conj()
+    return np.real(np.fft.ifft(cpsd / np.abs(cpsd)))
 
 def cross_correlation(x, y):
     """Cross correlation
@@ -34,8 +35,8 @@ def cross_correlation(x, y):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    r = x * y.conj()
-    return np.real(np.fft.ifft(r) / max(np.abs(r)))
+    cpsd = x * y.conj()
+    return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
 
 def tdoa(x, y, cc_func, fs=None):
     """Estimate time difference of arrival (TDOA) by finding peak in (G)CC.
@@ -43,7 +44,7 @@ def tdoa(x, y, cc_func, fs=None):
     Args:
         x       : 1-d array, frequency domain signal 1
         y       : 1-d array, frequency domain signal 2
-        cc_func : cross correlation 
+        cc_func : cross correlation function.
         fs      : sample rate, if not given (default) the result is number
                   of samples
 
@@ -58,6 +59,38 @@ def tdoa(x, y, cc_func, fs=None):
         return peak_at
     else:
         return 1.0 * peak_at / fs
+
+def cc_across_time(tfx, tfy, cc_func):
+    """Cross correlations across time.
+
+    Args:
+        tfx     : time-frequency domain signal 1.
+        tfy     : time-frequency domain signal 2.
+        cc_func : cross correlation function.
+
+    Returns:
+        cc_atime : cross correlation at different time.
+
+    Note:
+        If tfx and tfy are not of the same length, the result will be 
+        truncated to the shorter one.
+    """
+    return np.array([cc_func(x, y) for x, y in izip(tfx, tfy)])
+
+def pairwise_cc(tf, cc_func):
+    """Pairwise cross correlations between all channels in signal.
+    
+    Args:
+        tf      : multi-channel time-frequency domain signal.
+        cc_func : cross correlation function.
+
+    Returns:
+        pw_cc   : pairwise cross correlations,
+                  dict : (channel id, channel id) -> cross correlation across time.
+    """
+    nch = len(tf)
+    return {(x, y) : cc_across_time(tf[x], tf[y], cc_func)
+                for x in range(nch) for y in range(nch) if x == 1}
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
