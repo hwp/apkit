@@ -37,7 +37,7 @@ def spectrogram(fs, tf, hop_size):
         _, nfft = c.shape
         ny = nfft / 2 + 1
         im = sp.imshow(np.abs(c[:,:ny]).T, vmin=0, vmax=vmax,
-                       cmap=plt.cm.YlOrRd, interpolation='none',
+                       cmap=plt.get_cmap('magma'), interpolation='none',
                        aspect='auto', origin='lower')
         l = len(c) * hop_size / fs
         plt.xticks(np.arange(l + 1) * fs / hop_size,
@@ -69,12 +69,12 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None):
         vmax = np.max(np.abs(cc))
 
         if zoom is None:
-            cc = np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1).T
+            cc = np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1)
         else:
             cc = np.concatenate((cc[:,-zoom:],
-                                 cc[:,:zoom+1]), axis=1).T
+                                 cc[:,:zoom+1]), axis=1)
             ny = zoom
-        im = sp.imshow(cc, vmin=-vmax, vmax=vmax, cmap=plt.cm.bwr,
+        im = sp.imshow(cc.T, vmin=-vmax, vmax=vmax, cmap=plt.cm.bwr,
                        interpolation='none', aspect='auto',
                        origin='lower')
         if ch_names is None:
@@ -83,8 +83,12 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None):
             plt.title('%s vs. %s' % tuple(ch_names[c] for c in k))
 
         l = len(cc) * hop_size / fs
-        plt.xticks(np.arange(l + 1) * fs / hop_size,
-                   [str(1.0 * t) for t in xrange(l + 1)])
+        m = 1
+        while l > 10:
+            l = l / 10
+            m = m * 10
+        plt.xticks(np.arange(l + 1) * m * fs / hop_size,
+                   [str(1.0 * m * t) for t in xrange(l + 1)])
 
         n = 2
         ypos = ny + np.arange(-n,n+1) * ny / n
