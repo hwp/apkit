@@ -11,7 +11,7 @@ import numpy as np
 import scipy.io.wavfile
 
 def load_wav(filename):
-    """Load wav file
+    """Load wav file, convert to normalized float value
 
     Args:
         filename : string or open file handle.
@@ -21,6 +21,9 @@ def load_wav(filename):
         signal   : multi-channel time-domain signal.
     """
     fs, signal = scipy.io.wavfile.read(filename)
+    if not np.issubdtype(signal.dtype, np.float):
+        assert np.issubdtype(signal.dtype, np.integer)
+        signal = signal.astype(float) / abs(np.iinfo(signal.dtype).min)
     return fs, signal.T
 
 def cola_hamming(win_size, hop_size):

@@ -21,8 +21,6 @@ def plot_wave(fs, signal):
         sp = fig.add_subplot(len(signal), 1, i+1)
         sp.plot(np.arange(len(c), dtype=float) / fs, c)
 
-    plt.show()
-
 def spectrogram(fs, tf, hop_size):
     """Plot spectrograms of singals
 
@@ -49,9 +47,7 @@ def spectrogram(fs, tf, hop_size):
                    [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
         fig.colorbar(im)
 
-    plt.show()
-
-def cc_graph(fs, pw_cc, hop_size, ch_names=None, zoom=None):
+def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None):
     """Plot pairwise cross correlation across time.
 
     Args:
@@ -95,8 +91,8 @@ def cc_graph(fs, pw_cc, hop_size, ch_names=None, zoom=None):
         plt.yticks(ypos, ['%.2g' % y for y in (ypos - ny) * 1.0 / fs])
         fig.colorbar(im)
 
+def show():
     plt.show()
-
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
