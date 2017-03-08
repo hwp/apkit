@@ -90,7 +90,7 @@ def pairwise_cc(tf, cc_func):
     """
     nch = len(tf)
     return {(x, y) : cc_across_time(tf[x], tf[y], cc_func)
-                for x in range(nch) for y in range(nch) if x == 1}
+                for x in range(nch) for y in range(nch) if x < y}
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4

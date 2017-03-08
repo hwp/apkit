@@ -51,33 +51,48 @@ def spectrogram(fs, tf, hop_size):
 
     plt.show()
 
-def cc_graph(fs, pw_cc, hop_size):
+def cc_graph(fs, pw_cc, hop_size, ch_names=None, zoom=None):
     """Plot pairwise cross correlation across time.
 
     Args:
         fs       : sample rate.
         pw_cc    : pairwise cross correlation, result from apkit.pairwise_cc
         hop_size : hop size of the STFT.
+        zoom     : if not None, zoom along y-axis (time-difference) 
+                   to +/- zoom samples.
     """
     fig = plt.figure()
 
-    for i, (k, cc) in enumerate(pw_cc.items()):
+    keys = sorted(pw_cc.keys())
+    for i, k in enumerate(keys):
+        cc = pw_cc[k]
         sp = fig.add_subplot(len(pw_cc), 1, i+1)
         _, nfft = cc.shape
         ny = nfft / 2 + 1
+        assert zoom < ny
         vmax = np.max(np.abs(cc))
-        im = sp.imshow(np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1).T,
-                       vmin=-vmax, vmax=vmax, cmap=plt.cm.bwr,
+
+        if zoom is None:
+            cc = np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1).T
+        else:
+            cc = np.concatenate((cc[:,-zoom:],
+                                 cc[:,:zoom+1]), axis=1).T
+            ny = zoom
+        im = sp.imshow(cc, vmin=-vmax, vmax=vmax, cmap=plt.cm.bwr,
                        interpolation='none', aspect='auto',
                        origin='lower')
+        if ch_names is None:
+            plt.title('Channel %d vs. %d' % k)
+        else:
+            plt.title('%s vs. %s' % tuple(ch_names[c] for c in k))
+
         l = len(cc) * hop_size / fs
         plt.xticks(np.arange(l + 1) * fs / hop_size,
                    [str(1.0 * t) for t in xrange(l + 1)])
-        '''
-        n = 4
-        plt.yticks(np.arange(n + 1) * ny / n,
-                   [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
-        '''
+
+        n = 2
+        ypos = ny + np.arange(-n,n+1) * ny / n
+        plt.yticks(ypos, ['%.2g' % y for y in (ypos - ny) * 1.0 / fs])
         fig.colorbar(im)
 
     plt.show()
