@@ -10,33 +10,36 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import numpy as np
 from itertools import izip
 
-def gcc_phat(x, y):
+def gcc_phat(x, y, upsample=1):
     """GCC-PHAT
 
     Args:
         x  : 1-d array, frequency domain signal 1
         y  : 1-d array, frequency domain signal 2
+        upsample : an integer indicating factor of upsampling.
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
     cpsd = x * y.conj()
-    return np.real(np.fft.ifft(cpsd / np.abs(cpsd)))
+    return np.real(np.fft.ifft(cpsd / np.abs(cpsd), n=cpsd.shape[-1] * upsample))
 
-def cross_correlation(x, y):
+def cross_correlation(x, y, upsample=1):
     """Cross correlation
 
     Args:
         x  : 1-d array, frequency domain signal 1
         y  : 1-d array, frequency domain signal 2
+        upsample : an integer indicating factor of upsampling.
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
     cpsd = x * y.conj()
-    return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
+    return np.real(np.fft.ifft(cpsd, n=cpsd.shape[-1] * upsample)
+                    / np.max(np.abs(cpsd)))
 
 def tdoa(x, y, cc_func, fs=None):
     """Estimate time difference of arrival (TDOA) by finding peak in (G)CC.
