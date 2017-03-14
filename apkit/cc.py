@@ -10,6 +10,32 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import numpy as np
 from itertools import izip
 
+def _freq_upsample(s, upsample):
+    """ padding in frequency domain, should be used with ifft so that
+    signal is upsampled in time-domain.
+
+    Args:
+        s        : frequency domain signal
+        upsample : an integer indicating factor of upsampling.
+
+    Returns:
+        padded signal
+    """
+    if upsample == 1:
+        return s
+    assert isinstance(upsample, int) and upsample > 1
+    l = len(s)
+    if l % 2 == 0:
+        h = l / 2
+        return upsample * np.concatenate(
+                (s[:h], np.array([s[h] / 2.0]),
+                 np.zeros(l * (upsample - 1) - 1),
+                 np.array([s[h] / 2.0]), s[h+1:]))
+    else:
+        h = l / 2 + 1
+        return upsample * np.concatenate(
+                (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
+
 def gcc_phat(x, y, upsample=1):
     """GCC-PHAT
 
@@ -23,7 +49,9 @@ def gcc_phat(x, y, upsample=1):
              index corresponds to time-domain signal
     """
     cpsd = x * y.conj()
-    return np.real(np.fft.ifft(cpsd / np.abs(cpsd), n=cpsd.shape[-1] * upsample))
+    cpsd_phat = cpsd / np.abs(cpsd)
+    cpsd_phat = _freq_upsample(cpsd_phat, upsample)
+    return np.real(np.fft.ifft(cpsd_phat))
 
 def cross_correlation(x, y, upsample=1):
     """Cross correlation
@@ -37,9 +65,8 @@ def cross_correlation(x, y, upsample=1):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    cpsd = x * y.conj()
-    return np.real(np.fft.ifft(cpsd, n=cpsd.shape[-1] * upsample)
-                    / np.max(np.abs(cpsd)))
+    cpsd = _freq_upsample(x * y.conj(), upsample)
+    return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
 
 def tdoa(x, y, cc_func, fs=None):
     """Estimate time difference of arrival (TDOA) by finding peak in (G)CC.
