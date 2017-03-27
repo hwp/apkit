@@ -43,7 +43,7 @@ def gcc_phat(x, y, upsample=1):
         x        : 1-d array, frequency domain signal 1
         y        : 1-d array, frequency domain signal 2
         upsample : an integer indicating factor of upsampling.
-                 : default value is 1.
+                   default value is 1.
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
@@ -61,7 +61,7 @@ def cross_correlation(x, y, upsample=1):
         x        : 1-d array, frequency domain signal 1
         y        : 1-d array, frequency domain signal 2
         upsample : an integer indicating factor of upsampling.
-                 : default value is 1.
+                   default value is 1.
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
@@ -69,30 +69,6 @@ def cross_correlation(x, y, upsample=1):
     """
     cpsd = _freq_upsample(x * y.conj(), upsample)
     return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
-
-def tdoa(x, y, cc_func, fs=None, upsample=1):
-    """Estimate time difference of arrival (TDOA) by finding peak in (G)CC.
-
-    Args:
-        x        : 1-d array, frequency domain signal 1
-        y        : 1-d array, frequency domain signal 2
-        cc_func  : cross correlation function.
-        fs       : sample rate, if not given (default) the result is number
-                   of samples (after upsampling).
-        upsample : an integer indicating factor of upsampling.
-                 : default value is 1.
-
-    Returns:
-        tdoa    : estimate of TDOA
-    """
-    cc = cc_func(x, y, upsample)
-    peak_at = np.argmax(cc)
-    if peak_at > len(cc) / 2:
-        peak_at = peak_at - len(cc)
-    if fs is None:
-        return peak_at
-    else:
-        return 1.0 * peak_at / (fs * upsample)
 
 def cc_across_time(tfx, tfy, cc_func, upsample=1):
     """Cross correlations across time.
@@ -102,7 +78,7 @@ def cc_across_time(tfx, tfy, cc_func, upsample=1):
         y        : 1-d array, frequency domain signal 2
         cc_func  : cross correlation function.
         upsample : an integer indicating factor of upsampling.
-                 : default value is 1.
+                   default value is 1.
 
     Returns:
         cc_atime : cross correlation at different time.
@@ -120,7 +96,7 @@ def pairwise_cc(tf, cc_func, upsample=1):
         tf       : multi-channel time-frequency domain signal.
         cc_func  : cross correlation function.
         upsample : an integer indicating factor of upsampling.
-                 : default value is 1.
+                   default value is 1.
 
     Returns:
         pw_cc   : pairwise cross correlations,
