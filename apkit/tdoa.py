@@ -53,7 +53,7 @@ def tdoa_hist(cc_atime, fs=None, upsample=1):
     Returns:
         tdoa    : estimate of TDOA
     """
-    idx, _ = stats.mode(np.argmax(cc_atime, axis=1))
+    [idx], _ = stats.mode(np.argmax(cc_atime, axis=1))
     return _tdoa_shift(idx, cc_atime.shape[1], fs, upsample)
 
 def tdoa_sum(cc_atime, fs=None, upsample=1):
