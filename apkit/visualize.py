@@ -47,15 +47,17 @@ def spectrogram(fs, tf, hop_size):
                    [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
         fig.colorbar(im)
 
-def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None):
+def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
     """Plot pairwise cross correlation across time.
 
     Args:
-        fs       : sample rate.
+        fs       : sample rate of the original signal (before upsampling).
         pw_cc    : pairwise cross correlation, result from apkit.pairwise_cc
         hop_size : hop size of the STFT.
         zoom     : if not None, zoom along y-axis (time-difference) 
                    to +/- zoom samples.
+        upsample : factor of upsampling used for computing the cross
+                   correlation.
     """
     fig = plt.figure()
 
@@ -92,7 +94,8 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None):
 
         n = 2
         ypos = ny + np.arange(-n,n+1) * ny / n
-        plt.yticks(ypos, ['%.2g' % y for y in (ypos - ny) * 1.0 / fs])
+        plt.yticks(ypos,
+                   ['%.2g' % y for y in (ypos - ny) * 1.0 / (upsample * fs)])
         fig.colorbar(im)
 
 def show():
