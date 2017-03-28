@@ -7,10 +7,25 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
+import math
+
 import numpy as np
 import scipy
 
 _TOLERANCE = 1e-13
+
+def vec2ae(v):
+    """Compute the azimuth and elevation of a given vector
+
+    Args:
+        v : 3D vector
+
+    Returns:
+        azimuth   : angle in radian in the x-y plane
+        elevation : angle in radian from x-y plane to vector
+    """
+    x, y, z = v
+    return (math.atan2(y, x), math.atan2(z, math.sqrt(x * x + y * y)))
 
 def _u_sqr_minus_1(lam, m, tau):
     n, d = m.shape
@@ -35,7 +50,7 @@ def _constraint_func(u):
 
 def doa_least_squares(pw_tdoa, m_pos, c=340.29):
     """DOA estimation by minimizing TDOA error (L2 norm).
-    
+
     The objective is formulated with the far-field assumption:
 
         minimize   : f(u) = |tau - m u|^2
@@ -64,7 +79,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
     if rank == d:
         assert False    # TODO pepper has coplanar microphones
     else:
-        assert rank == d - 1    # not able to compute rank deficiency of 
+        assert rank == d - 1    # not able to compute rank deficiency of
                                 # more than one
         sinv = np.diag(np.append(1. / s[:-1], 0))
         sinv = np.append(sinv, np.zeros((n-d, n-d)), axis=1)
@@ -73,7 +88,6 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
         # (without constraints)
         # the solution x must be orthognal to null space of m
         x = vh.H * sinv * u.H * tau
-        print x.T * x, (tau - m * x).T * (tau - m * x)
 
         if x.T * x <= 1.0:
             # in case of norm of x less than 1, add y in the null space to
@@ -83,7 +97,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
             # two possible solutions
             u1 = x + vh[-1].H * y
             u2 = x - vh[-1].H * y
-            return [u1, u2]
+            return [u1.A1, u2.A1]
         else:
             # otherwise the solution must be somewhere f is not stationary,
             # while f - lambda * g is stationary, therefore
@@ -91,7 +105,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
             lam = scipy.optimize.fsolve(_u_sqr_minus_1, 1e-5, (m, tau))
             u = np.linalg.solve(m.T * m - lam * np.eye(d), m.T * tau)
 
-            # TODO: there are two solutions, one at mininum of f and 
+            # TODO: there are two solutions, one at mininum of f and
             # the other at maximum. However only one is solved here.
             # hack here, normalize unconstraint solution, and compare
             u2 = x / np.linalg.norm(x)
@@ -108,7 +122,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
             print np.linalg.norm(tau - m * u3)
             '''
 
-            return [u]
+            return [u.A1]
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
