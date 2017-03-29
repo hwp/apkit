@@ -36,7 +36,7 @@ def _freq_upsample(s, upsample):
         return upsample * np.concatenate(
                 (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
 
-def gcc_phat(x, y, upsample=1):
+def gcc_phat(x, y, upsample=1, noise_cpsd=None):
     """GCC-PHAT
 
     Args:
@@ -44,12 +44,15 @@ def gcc_phat(x, y, upsample=1):
         y        : 1-d array, frequency domain signal 2
         upsample : an integer indicating factor of upsampling.
                    default value is 1.
+        noise_cpsd : noise cross power spectral density
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
     cpsd = x * y.conj()
+    if noise_cpsd is not None:
+        cpsd = cpsd - noise_cpsd
     cpsd_phat = cpsd / np.abs(cpsd)
     cpsd_phat = _freq_upsample(cpsd_phat, upsample)
     return np.real(np.fft.ifft(cpsd_phat))
@@ -95,13 +98,33 @@ def pairwise_cc(tf, cc_func, cc_args=()):
         tf      : multi-channel time-frequency domain signal.
         cc_func : cross correlation function.
         cc_args : extra arguments of cc_func.
+                  if cc_args is a dict, the keys will be indices of 
+                  channel pairs, and the value will be pass to the cc_func
+                  for this pair. Otherwise, cc_args will be regarded as a
+                  list and same arguments will be used for all pairs.
 
     Returns:
         pw_cc   : pairwise cross correlations,
                   dict : (channel id, channel id) -> cross correlation across time.
     """
     nch = len(tf)
-    return {(x, y) : cc_across_time(tf[x], tf[y], cc_func, cc_args)
+    return {(x, y) : cc_across_time(tf[x], tf[y], cc_func, 
+                cc_args[(x, y)] if isinstance(cc_args, dict) else cc_args)
+                for x in range(nch) for y in range(nch) if x < y}
+
+def pairwise_cpsd(tf):
+    """Pairwise cross power spectral density between all channels in singal.
+    The result is averaged across time.
+
+    Args:
+        tf      : multi-channel time-frequency domain signal.
+
+    Returns:
+        pw_cpsd : pairwise cross power spectral density.
+                  dict : (channel id, channel id) -> cpsd
+    """
+    nch = len(tf)
+    return {(x, y) : np.average(tf[x] * tf[y].conj(), axis=0)
                 for x in range(nch) for y in range(nch) if x < y}
 
 # -*- Mode: Python -*-
