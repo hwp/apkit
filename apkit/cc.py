@@ -70,15 +70,14 @@ def cross_correlation(x, y, upsample=1):
     cpsd = _freq_upsample(x * y.conj(), upsample)
     return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
 
-def cc_across_time(tfx, tfy, cc_func, upsample=1):
+def cc_across_time(tfx, tfy, cc_func, cc_args=()):
     """Cross correlations across time.
 
     Args:
         x        : 1-d array, frequency domain signal 1
         y        : 1-d array, frequency domain signal 2
         cc_func  : cross correlation function.
-        upsample : an integer indicating factor of upsampling.
-                   default value is 1.
+        cc_args : extra arguments of cc_func.
 
     Returns:
         cc_atime : cross correlation at different time.
@@ -87,23 +86,22 @@ def cc_across_time(tfx, tfy, cc_func, upsample=1):
         If tfx and tfy are not of the same length, the result will be 
         truncated to the shorter one.
     """
-    return np.array([cc_func(x, y, upsample) for x, y in izip(tfx, tfy)])
+    return np.array([cc_func(x, y, *cc_args) for x, y in izip(tfx, tfy)])
 
-def pairwise_cc(tf, cc_func, upsample=1):
+def pairwise_cc(tf, cc_func, cc_args=()):
     """Pairwise cross correlations between all channels in signal.
     
     Args:
-        tf       : multi-channel time-frequency domain signal.
-        cc_func  : cross correlation function.
-        upsample : an integer indicating factor of upsampling.
-                   default value is 1.
+        tf      : multi-channel time-frequency domain signal.
+        cc_func : cross correlation function.
+        cc_args : extra arguments of cc_func.
 
     Returns:
         pw_cc   : pairwise cross correlations,
                   dict : (channel id, channel id) -> cross correlation across time.
     """
     nch = len(tf)
-    return {(x, y) : cc_across_time(tf[x], tf[y], cc_func, upsample)
+    return {(x, y) : cc_across_time(tf[x], tf[y], cc_func, cc_args)
                 for x in range(nch) for y in range(nch) if x < y}
 
 # -*- Mode: Python -*-
