@@ -62,13 +62,13 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
     fig = plt.figure()
 
     keys = sorted(pw_cc.keys())
+    vmax = np.max([np.max(np.abs(cc)) for cc in pw_cc.itervalues()])
     for i, k in enumerate(keys):
         cc = pw_cc[k]
         sp = fig.add_subplot(len(pw_cc), 1, i+1)
         _, nfft = cc.shape
         ny = nfft / 2 + 1
         assert zoom < ny
-        vmax = np.max(np.abs(cc))
 
         if zoom is None:
             cc = np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1)
