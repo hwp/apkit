@@ -24,6 +24,8 @@ def load_wav(filename):
     if not np.issubdtype(signal.dtype, np.float):
         assert np.issubdtype(signal.dtype, np.integer)
         signal = signal.astype(float) / abs(np.iinfo(signal.dtype).min)
+    if signal.ndim == 1:
+        signal = np.expand_dims(signal, axis=1)
     return fs, signal.T
 
 def save_wav(filename, fs, signal):
@@ -85,6 +87,32 @@ def istft(tf, hop_size):
         signal[:, t*hop_size:t*hop_size+nfbin] += \
                 np.real(np.fft.ifft(tf[:, t]))
     return signal
+
+def power(signal):
+    """Signal power
+
+    Args:
+        signal : multi-channel time-domain signal
+
+    Returns:
+        power  : power of each channel.
+    """
+    nch, nsamples = signal.shape
+    return np.einsum('ct,ct->c', signal, signal) / float(nsamples)
+
+def snr(sandn, noise):
+    """Signal-to-noise ratio given signal with noise and noise
+
+    Args:
+        sandn : signal and noise multi-channel time-domain signal
+        noise : noise multi-channel time-domain signal
+
+    Returns:
+        snr   : snr of each channel in dB.
+    """
+    pnos = power(noise)
+    psig = power(sandn) - pnos
+    return 10 * np.log10(psig / pnos)
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
