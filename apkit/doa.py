@@ -67,7 +67,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
     """
     pairs = pw_tdoa.keys()
     tau = np.matrix([pw_tdoa[p] * c for p in pairs]).T
-    m = np.matrix([m_pos[j] - m_pos[i] for i, j in pairs])
+    m = np.matrix([m_pos[i] - m_pos[j] for i, j in pairs])
 
     # dimension
     n, d = m.shape

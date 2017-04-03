@@ -3,6 +3,8 @@ tdoa.py
 
 TDOA (time difference of arrival) estimation.
 
+TDOA between x and y means the y is delayed by TDOA wrt x.
+
 Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """

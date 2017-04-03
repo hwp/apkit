@@ -50,7 +50,7 @@ def gcc_phat(x, y, upsample=1, noise_cpsd=None):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    cpsd = x * y.conj()
+    cpsd = x.conj() * y
     if noise_cpsd is not None:
         cpsd = cpsd - noise_cpsd
     cpsd_phat = cpsd / np.abs(cpsd)
@@ -70,7 +70,7 @@ def cross_correlation(x, y, upsample=1):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    cpsd = _freq_upsample(x * y.conj(), upsample)
+    cpsd = _freq_upsample(x.conj() * y, upsample)
     return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
 
 def cc_across_time(tfx, tfy, cc_func, cc_args=()):
@@ -124,7 +124,7 @@ def pairwise_cpsd(tf):
                   dict : (channel id, channel id) -> cpsd
     """
     nch = len(tf)
-    return {(x, y) : np.average(tf[x] * tf[y].conj(), axis=0)
+    return {(x, y) : np.average(tf[x].conj() * tf[y], axis=0)
                 for x in range(nch) for y in range(nch) if x < y}
 
 def cov_matrix(tf):
