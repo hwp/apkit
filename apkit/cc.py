@@ -10,31 +10,7 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import numpy as np
 from itertools import izip
 
-def _freq_upsample(s, upsample):
-    """ padding in frequency domain, should be used with ifft so that
-    signal is upsampled in time-domain.
-
-    Args:
-        s        : frequency domain signal
-        upsample : an integer indicating factor of upsampling.
-
-    Returns:
-        padded signal
-    """
-    if upsample == 1:
-        return s
-    assert isinstance(upsample, int) and upsample > 1
-    l = len(s)
-    if l % 2 == 0:
-        h = l / 2
-        return upsample * np.concatenate(
-                (s[:h], np.array([s[h] / 2.0]),
-                 np.zeros(l * (upsample - 1) - 1),
-                 np.array([s[h] / 2.0]), s[h+1:]))
-    else:
-        h = l / 2 + 1
-        return upsample * np.concatenate(
-                (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
+from .basic import freq_upsample
 
 def gcc_phat(x, y, upsample=1, noise_cpsd=None):
     """GCC-PHAT
@@ -56,7 +32,7 @@ def gcc_phat(x, y, upsample=1, noise_cpsd=None):
     # phat transform
     cpsd_phat = cpsd
     cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
-    cpsd_phat = _freq_upsample(cpsd_phat, upsample)
+    cpsd_phat = freq_upsample(cpsd_phat, upsample)
     return np.real(np.fft.ifft(cpsd_phat))
 
 def cross_correlation(x, y, upsample=1):
@@ -72,7 +48,7 @@ def cross_correlation(x, y, upsample=1):
         cc : cross correlation of the two signal, 1-d array,
              index corresponds to time-domain signal
     """
-    cpsd = _freq_upsample(x.conj() * y, upsample)
+    cpsd = freq_upsample(x.conj() * y, upsample)
     return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
 
 def cc_across_time(tfx, tfy, cc_func, cc_args=()):
