@@ -53,7 +53,9 @@ def gcc_phat(x, y, upsample=1, noise_cpsd=None):
     cpsd = x.conj() * y
     if noise_cpsd is not None:
         cpsd = cpsd - noise_cpsd
-    cpsd_phat = cpsd / np.abs(cpsd)
+    # phat transform
+    cpsd_phat = cpsd
+    cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
     cpsd_phat = _freq_upsample(cpsd_phat, upsample)
     return np.real(np.fft.ifft(cpsd_phat))
 
