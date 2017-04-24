@@ -5,4 +5,3 @@ from .cc import gcc_phat, cross_correlation, cc_across_time, \
 from .tdoa import single_tdoa, tdoa_hist, tdoa_sum, pairwise_tdoa
 from .doa import vec2ae, doa_least_squares
 from .bf import bf_delay_sum, bf_superdir
-import visualize
