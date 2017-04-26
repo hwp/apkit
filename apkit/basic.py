@@ -8,7 +8,7 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
 import numpy as np
-import scipy.io.wavfile
+import wave
 
 def load_wav(filename):
     """Load wav file, convert to normalized float value
@@ -20,23 +20,46 @@ def load_wav(filename):
         fs       : sample rate.
         signal   : multi-channel time-domain signal.
     """
-    fs, signal = scipy.io.wavfile.read(filename)
-    if not np.issubdtype(signal.dtype, np.float):
-        assert np.issubdtype(signal.dtype, np.integer)
-        signal = signal.astype(float) / abs(np.iinfo(signal.dtype).min)
-    if signal.ndim == 1:
-        signal = np.expand_dims(signal, axis=1)
-    return fs, signal.T
+    w = wave.open(filename, 'rb')
+    nchs = w.getnchannels()
+    fs = w.getframerate()
+    sw = w.getsampwidth()
+    if sw == 2:
+        dtype = np.int16
+    elif sw == 1:
+        dtype = np.int8
+    elif sw == 4:
+        dtype = np.int32
+    else:
+        assert False
+    data = np.fromstring(w.readframes(w.getnframes()), dtype=dtype)
+    data = data.reshape((-1, nchs))
+    if not np.issubdtype(data.dtype, np.float):
+        assert np.issubdtype(data.dtype, np.integer)
+        data = data.astype(float) / abs(np.iinfo(data.dtype).min)
+    w.close()
+    return fs, data.T
 
 def save_wav(filename, fs, signal):
-    """Save audio data as wave file.
+    """Save audio data as wav file.
 
     Args:
         filename : string or open file handle.
         fs       : sample rate.
         signal   : multi-channel time-domain signal.
     """
-    scipy.io.wavfile.write(filename, fs, signal.T)
+    if np.issubdtype(signal.dtype, float):
+        signal[signal > 1.0] = 1.0
+        signal[signal < -1.0] = -1.0
+        dtype = np.dtype('int16')
+        signal = (signal * abs(np.iinfo(dtype).min)).astype(dtype)
+
+    w = wave.open(filename, 'wb')
+    w.setnchannels(len(signal))
+    w.setsampwidth(signal.dtype.itemsize)
+    w.setframerate(fs)
+    w.writeframes(signal.T.tobytes())
+    w.close()
 
 def cola_hamming(win_size, hop_size):
     """ Hamming window, periodic and constant-overlap-add (COLA, sum=1)
