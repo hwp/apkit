@@ -52,7 +52,7 @@ def save_wav(filename, fs, signal):
         signal[signal > 1.0] = 1.0
         signal[signal < -1.0] = -1.0
         dtype = np.dtype('int16')
-        signal = (signal * abs(np.iinfo(dtype).min)).astype(dtype)
+        signal = (signal * np.iinfo(dtype).max).astype(dtype)
 
     w = wave.open(filename, 'wb')
     w.setnchannels(len(signal))
@@ -137,17 +137,29 @@ def freq_upsample(s, upsample):
         return upsample * np.concatenate(
                 (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
 
-def power(signal):
+def power(signal, vad_mask=None, vad_size=1):
     """Signal power
 
     Args:
         signal : multi-channel time-domain signal
 
     Returns:
-        power  : power of each channel.
+        power    : power of each channel.
+        vad_mask : if given (default is None), the power on the voice
+                   detected frames is computed.
+        vad_size : vad frame size, default is 1.
     """
     nch, nsamples = signal.shape
-    return np.einsum('ct,ct->c', signal, signal) / float(nsamples)
+    if vad_mask is not None:
+        vad_mask = vad_mask.repeat(vad_size)
+        if len(vad_mask) >= nsamples:
+            vad_mask = vad_mask[:nsamples]
+        else:
+            vad_mask = np.append(vad_mask,
+                                 np.zeros(nsamples - len(vad_mask))
+                                    .astype(np.bool))
+        signal = signal[:,vad_mask]
+    return np.einsum('ct,ct->c', signal, signal) / float(len(signal.T))
 
 def snr(sandn, noise):
     """Signal-to-noise ratio given signal with noise and noise
