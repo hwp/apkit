@@ -73,6 +73,18 @@ def cola_hamming(win_size, hop_size):
     """
     return np.hamming(win_size + 1)[0:win_size] \
                 / 1.08 * hop_size / win_size * 2
+
+def cola_rectangle(win_size, hop_size):
+    """ Recangle window, periodic and constant-overlap-add (COLA, sum=1)
+
+    Args:
+        win_size : window size
+        hop_size : hop size
+
+    Returns:
+        w        : window coefficients
+    """
+    return np.ones(win_size) * hop_size / win_size
     
 def stft(signal, window, win_size, hop_size):
     """Convert time-domain signal to time-frequency domain.

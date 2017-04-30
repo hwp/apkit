@@ -64,6 +64,9 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
         pw_tdoa : pairwise TDOA estimate, result from apkit.pairwise_tdoa.
         m_pos   : list of vector position in 3D space in meters.
         c       : (default 340.29 m/s) speed of sound.
+    
+    Returns:
+        list of optimal solutions of u
     """
     pairs = pw_tdoa.keys()
     tau = np.matrix([pw_tdoa[p] * c for p in pairs]).T
