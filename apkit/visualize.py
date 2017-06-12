@@ -98,6 +98,23 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
                    ['%.2g' % y for y in (ypos - ny) * 1.0 / (upsample * fs)])
         fig.colorbar(im)
 
+def plot_power(fs, tf, hop_size):
+    """Plot power of singals (frame by frame)
+
+    Args:
+        fs       : sample rate.
+        tf       : multi-channel time-frequency domain signal.
+        hop_size : hop size of the STFT.
+    """
+    fig = plt.figure()
+
+    for i, c in enumerate(tf):
+        sp = fig.add_subplot(len(tf), 1, i+1)
+        lt, lf = c.shape
+        t = np.arange(lt, dtype=float) / fs * hop_size
+        power = np.sum(np.abs(c) ** 2, axis=1) / (lf * lf)
+        sp.semilogy(t, power)
+
 def show():
     plt.show()
 

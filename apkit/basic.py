@@ -153,13 +153,13 @@ def power(signal, vad_mask=None, vad_size=1):
     """Signal power
 
     Args:
-        signal : multi-channel time-domain signal
-
-    Returns:
-        power    : power of each channel.
+        signal   : multi-channel time-domain signal
         vad_mask : if given (default is None), the power on the voice
                    detected frames is computed.
         vad_size : vad frame size, default is 1.
+
+    Returns:
+        power    : power of each channel.
     """
     nch, nsamples = signal.shape
     if vad_mask is not None:

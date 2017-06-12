@@ -49,7 +49,7 @@ def cross_correlation(x, y, upsample=1):
              index corresponds to time-domain signal
     """
     cpsd = freq_upsample(x.conj() * y, upsample)
-    return np.real(np.fft.ifft(cpsd) / np.max(np.abs(cpsd)))
+    return np.real(np.fft.ifft(cpsd))
 
 def cc_across_time(tfx, tfy, cc_func, cc_args=()):
     """Cross correlations across time.
