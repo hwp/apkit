@@ -21,6 +21,27 @@ def _steering_vec(delay, nfbin, fs=None):
             (np.arange(nfbin, dtype=float) - nfbin / 2) / nfbin)
     return np.exp(-2j * math.pi * np.outer(delay, freq))
 
+def apply_beamforming(tf, bf_wt):
+    return np.einsum('ctf,cf->tf', tf, bf_wt)
+
+def bf_weight_delay_sum(nfbin, delay, fs=None):
+    """Compute weight of delay-sum beamformer
+
+    Args:
+        nfbin : number of frequency bins
+        delay : delay of each channel. If fs is given, value denotes
+                delay in second (continuous-time) ,
+                otherwise # of samples (discrete-time).
+        fs    : sample rate. Default is None, @see delay.
+
+    Returns:
+        bf_wt : beamforming weight
+    """
+    nch = len(delay)
+
+    # beamforming weight: delay and normalize
+    return _steering_vec(delay, nfbin, fs).conj() / float(nch)
+
 def bf_delay_sum(tf, delay, fs=None):
     """Apply delay-sum beamformer to signals.
 
@@ -35,16 +56,44 @@ def bf_delay_sum(tf, delay, fs=None):
         res   : filtered signal in time-frequency domain.
     """
     tf = np.asarray(tf)
-    nch, _, nfbin = tf.shape
+    _, _, nfbin = tf.shape
 
     # transfer function of delay filter
-    tr_func = _steering_vec(delay, nfbin, fs).conj() / float(nch)
+    bf_wt = bf_weight_delay_sum(nfbin, delay, fs)
 
     # apply transfer function and sum along channels
-    return np.einsum('ctf,cf->tf', tf, tr_func)
+    return apply_beamforming(tf, bf_wt)
+
+def bf_weight_superdir(nfbin, delay, ncov, fs=None):
+    """Compute weight of MVDR beamformer
+
+    Args:
+        nfbin : number of frequency bins
+        delay : delay of each channel. If fs is given, value denotes
+                delay in second (continuous-time) ,
+                otherwise # of samples (discrete-time).
+        ncov  : noise covariance
+        fs    : sample rate. Default is None, @see delay.
+
+    Returns:
+        res   : filtered signal in time-frequency domain.
+    """
+    nch = len(delay)
+    eta = 1e-6
+
+    ninv = np.zeros(ncov.shape, dtype=complex) 
+    for i in xrange(nfbin):
+        ninv[i] = np.asmatrix(ncov[i] + np.eye(nch) * eta).I
+
+    stv = _steering_vec(delay, nfbin, fs)
+
+    # beamforming weight
+    numerator = np.einsum('fcd,df->cf', ninv, stv)
+    denominator = np.einsum('cf,cf->f', stv.conj(), numerator)
+    return np.einsum('cf,f->cf', numerator, 1.0 / denominator).conj()
 
 def bf_superdir(tf, delay, ncov, fs=None):
-    """Apply superdirective beamformer to signals.
+    """Apply MVDR beamformer to signals.
 
     Args:
         tf    : multi-channel time-frequency domain signal.
@@ -58,23 +107,12 @@ def bf_superdir(tf, delay, ncov, fs=None):
         res   : filtered signal in time-frequency domain.
     """
     tf = np.asarray(tf)
-    nch, _, nfbin = tf.shape
+    _, _, nfbin = tf.shape
 
-    eta = 1e-6
+    bf_wt = bf_weight_superdir(nfbin, delay, ncov, fs)
 
-    ninv = np.zeros(ncov.shape, dtype=complex) 
-    for i in xrange(nfbin):
-        ninv[i] = np.asmatrix(ncov[i] + np.eye(nch) * eta).I
-
-    stv = _steering_vec(delay, nfbin, fs)
-
-    # transfer function
-    numerator = np.einsum('fcd,df->cf', ninv, stv)
-    denominator = np.einsum('cf,cf->f', stv.conj(), numerator)
-    tr_func = np.einsum('cf,f->cf', numerator, 1.0 / denominator).conj()
-    
     # apply transfer function and sum along channels
-    return np.einsum('ctf,cf->tf', tf, tr_func)
+    return apply_beamforming(tf, bf_wt)
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
