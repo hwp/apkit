@@ -85,7 +85,7 @@ def cola_rectangle(win_size, hop_size):
         w        : window coefficients
     """
     return np.ones(win_size) * hop_size / win_size
-    
+
 def stft(signal, window, win_size, hop_size):
     """Convert time-domain signal to time-frequency domain.
 
@@ -100,7 +100,7 @@ def stft(signal, window, win_size, hop_size):
     """
     assert signal.ndim == 2
     w = window(win_size, hop_size)
-    return np.array([[np.fft.fft(c[t:t+win_size] * w) 
+    return np.array([[np.fft.fft(c[t:t+win_size] * w)
         for t in xrange(0, len(c) - win_size, hop_size)] for c in signal])
 
 def istft(tf, hop_size):
@@ -172,6 +172,24 @@ def power(signal, vad_mask=None, vad_size=1):
                                     .astype(np.bool))
         signal = signal[:,vad_mask]
     return np.einsum('ct,ct->c', signal, signal) / float(len(signal.T))
+
+def power_tf(tf):
+    """Compute power of time-frequency domain signal
+
+    Args:
+        tf       : mono/multi-channel time-frequency domain signal.
+
+    Returns:
+        power    : power of each channel.
+    """
+    if tf.ndim == 2:
+        # mono channel
+        nt, nf = tf.shape
+        return np.einsum('tf,tf', tf, tf.conj()).real / float(nt * nf)
+    else:
+        # multi channel
+        nch, nt, nf = tf.shape
+        return np.einsum('ctf,ctf->c', tf, tf.conj()).real / float(nt * nf)
 
 def snr(sandn, noise):
     """Signal-to-noise ratio given signal with noise and noise
