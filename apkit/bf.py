@@ -45,10 +45,10 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
 
     # inner product -> different in time 
     if doa.ndim == 1:
-        diff = np.einsum('ij,j->i', r_pos, doa) / c
+        diff = -np.einsum('ij,j->i', r_pos, doa) / c
     else:
         assert doa.ndim == 2
-        diff = np.einsum('ij,kj->ki', r_pos, doa) / c
+        diff = -np.einsum('ij,kj->ki', r_pos, doa) / c
 
     if fs is not None:
         return diff * fs
