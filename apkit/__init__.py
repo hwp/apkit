@@ -7,3 +7,4 @@ from .doa import vec2ae, doa_least_squares
 from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
                 bf_superdir, bf_weight_superdir, bf_weight_superdir_fast, \
                 compute_delay
+from .aspec_doa import empirical_cov_mat

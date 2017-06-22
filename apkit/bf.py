@@ -65,7 +65,7 @@ def apply_beamforming(tf, bf_wt):
     Returns:
         res   : filtered signal in time-frequency domain.
     """
-    return np.einsum('ctf,cf->tf', tf, bf_wt)
+    return np.einsum('ctf,cf->tf', tf, bf_wt.conj())
 
 def bf_weight_delay_sum(nfbin, delay, fs=None):
     """Compute weight of delay-sum beamformer
@@ -83,7 +83,7 @@ def bf_weight_delay_sum(nfbin, delay, fs=None):
     nch = len(delay)
 
     # beamforming weight: delay and normalize
-    return _steering_vec(delay, nfbin, fs).conj() / float(nch)
+    return _steering_vec(delay, nfbin, fs) / float(nch)
 
 def bf_delay_sum(tf, delay, fs=None):
     """Apply delay-sum beamformer to signals.
@@ -127,7 +127,7 @@ def bf_weight_superdir_fast(nfbin, delay, ninv, fs=None):
     # beamforming weight
     numerator = np.einsum('fcd,df->cf', ninv, stv)
     denominator = np.einsum('cf,cf->f', stv.conj(), numerator)
-    return np.einsum('cf,f->cf', numerator, 1.0 / denominator).conj()
+    return np.einsum('cf,f->cf', numerator, 1.0 / denominator)
 
 def bf_weight_superdir(nfbin, delay, ncov, fs=None):
     """Compute weight of MVDR beamformer
