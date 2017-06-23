@@ -13,12 +13,20 @@ import numpy as np
 
 def steering_vector(delay, nfbin, fs=None):
     """Steering vector of delay.
+
+    Args:
+        delay : delay of each channel,
+                unit is second if fs is not None, otherwise sample
+        nfbin : number of frequency bins, aka window size
+        fs    : (default None) sample rate
+
+    Returns:
+        stv   : steering vector, indices (cf)
     """
     delay = np.asarray(delay)
     if fs is not None:
         delay *= fs      # to discrete-time value
-    freq = np.fft.ifftshift(
-            (np.arange(nfbin, dtype=float) - nfbin / 2) / nfbin)
+    freq = np.fft.fftfreq(nfbin)
     return np.exp(-2j * math.pi * np.outer(delay, freq))
 
 def compute_delay(m_pos, doa, c=340.29, fs=None):
@@ -35,7 +43,7 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
     Return:
         delay : delay with reference of arrival at first microphone.
                 first element is always 0.
-                unit is second if fs is not None, otherwise sample.
+                unit is second if fs is None, otherwise sample.
     """
     m_pos = np.asarray(m_pos)
     doa = np.asarray(doa)

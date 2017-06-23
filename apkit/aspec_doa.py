@@ -33,7 +33,6 @@ def empirical_cov_mat(tf, tw=2, fw=2):
     kernel = np.einsum('t,f->tf', np.hanning(tw * 2 + 1)[1:-1],
                        np.hanning(fw * 2 + 1)[1:-1])
     kernel = kernel / np.sum(kernel)    # normalize
-    print kernel
 
     # apply to each channel pair
     ecov = np.zeros(cov.shape, dtype=cov.dtype)
