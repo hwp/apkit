@@ -6,5 +6,5 @@ from .tdoa import single_tdoa, tdoa_hist, tdoa_sum, pairwise_tdoa
 from .doa import vec2ae, doa_least_squares
 from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
                 bf_superdir, bf_weight_superdir, bf_weight_superdir_fast, \
-                compute_delay
+                steering_vector, compute_delay
 from .aspec_doa import empirical_cov_mat

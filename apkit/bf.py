@@ -11,7 +11,7 @@ import math
 
 import numpy as np
 
-def _steering_vec(delay, nfbin, fs=None):
+def steering_vector(delay, nfbin, fs=None):
     """Steering vector of delay.
     """
     delay = np.asarray(delay)
@@ -83,7 +83,7 @@ def bf_weight_delay_sum(nfbin, delay, fs=None):
     nch = len(delay)
 
     # beamforming weight: delay and normalize
-    return _steering_vec(delay, nfbin, fs) / float(nch)
+    return steering_vector(delay, nfbin, fs) / float(nch)
 
 def bf_delay_sum(tf, delay, fs=None):
     """Apply delay-sum beamformer to signals.
@@ -122,7 +122,7 @@ def bf_weight_superdir_fast(nfbin, delay, ninv, fs=None):
         res   : filtered signal in time-frequency domain.
     """
     # steering vector
-    stv = _steering_vec(delay, nfbin, fs)
+    stv = steering_vector(delay, nfbin, fs)
 
     # beamforming weight
     numerator = np.einsum('fcd,df->cf', ninv, stv)
