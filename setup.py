@@ -8,5 +8,6 @@ setup(name='apkit',
       author_email='weipeng.he@idiap.ch',
       license='MIT',
       packages=['apkit'],
+      include_package_data=True,
       zip_safe=False)
 

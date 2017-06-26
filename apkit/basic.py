@@ -7,6 +7,7 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
+import os
 import math
 import wave
 
@@ -258,6 +259,19 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
         return diff * fs
     else:
         return diff
+
+def load_pts_on_sphere(name='p4000'):
+    """Load points on a unit sphere
+
+    Args:
+        name : should always be 'p4000'
+
+    Returns:
+        pts  : array of points
+    """
+    this_dir, this_filename = os.path.split(__file__)
+    data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
+    return np.load(data_path)
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
