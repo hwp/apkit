@@ -8,4 +8,5 @@ from .tdoa import single_tdoa, tdoa_hist, tdoa_sum, pairwise_tdoa
 from .doa import vec2ae, doa_least_squares
 from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
                 bf_superdir, bf_weight_superdir, bf_weight_superdir_fast
-from .aspec_doa import empirical_cov_mat, local_maxima, phi_mvdr
+from .aspec_doa import empirical_cov_mat, local_maxima, \
+                       convert_to_azimuth, phi_mvdr

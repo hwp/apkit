@@ -7,10 +7,14 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
+import sys
+import math
+
 import numpy as np
 import scipy.ndimage
+import scipy.interpolate
 
-from .basic import steering_vector
+from .basic import steering_vector, compute_delay
 
 _apply_conv = scipy.ndimage.filters.convolve
 
@@ -100,6 +104,53 @@ def local_maxima(phi, nlist, th=0.0):
                     lmf.append(i)
         lmax.append(lmf)
     return lmax
+
+def convert_to_azimuth(phi, doa, agrid, egrid, m_pos):
+    """Convert LASF to a function of azimuth by finding the maximum across elevation.
+
+    Args:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+        doa   : set of DOA associated with phi
+        agrid : azimuth grid (rad)
+        egrid : elevation grid (rad)
+        m_pos : microphone positions, (M,3) array,
+                M is number of microphones.
+
+    Return    :
+        phi_a : phi on azimuth grid, indexed by 'ta',
+                'a' is the azimuth index
+    """
+    ndoa, nframe = phi.shape
+    phi_a = np.zeros((nframe, len(agrid)))
+
+    # delay on data points (doa)
+    delay = compute_delay(m_pos, doa)
+
+    # DOAs on grid
+    gdoa = [[(math.cos(e)*math.cos(a),
+              math.cos(e)*math.sin(a),
+              math.sin(e)) for e in egrid] for a in agrid]
+
+    # delay on grid
+    gdelay = [compute_delay(m_pos, d) for d in gdoa]
+
+    # iterate through frames
+    for t in xrange(nframe):
+        print >> sys.stderr, 'frame %d' % t
+        # create interpolated function
+        phi_intp = scipy.interpolate.Rbf(delay[:,1], delay[:,2],
+                                         delay[:,3], phi[:,t],
+                                         function='thin_plate')
+        # interpolate on each azimuth direction
+        for i, d in enumerate(gdelay):
+            # interpolate
+            p = phi_intp(d[:,1], d[:,2], d[:,3])
+
+            # max pooling
+            phi_a[t,i] = np.max(p)
+
+    return phi_a
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
