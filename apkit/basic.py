@@ -273,17 +273,24 @@ def load_pts_on_sphere(name='p4000'):
     data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
     return np.load(data_path)
 
-def neighbor_list(pts, dist):
+def neighbor_list(pts, dist, scale_z=1.0):
     """List of neighbors
 
     Args:
-        pts   : array of points on a unit sphere
-        dist  : distance (rad) threshold
+        pts     : array of points on a unit sphere
+        dist    : distance (rad) threshold
+        scale_z : (default 1.0) scale of z-axis,
+                  if scale_z is smaller than 1, more neighbors will be 
+                  along elevation
 
     Returns:
-        nlist : list of list of neighbor indices
+        nlist   : list of list of neighbor indices
     """
     # pairwise inner product
+    if scale_z != 1.0:
+        pts = np.copy(pts)
+        pts[:,2] *= scale_z
+        pts /= np.linalg.norm(pts, axis=1, keepdims=True)
     pip = np.einsum('ik,jk->ij', pts, pts)
 
     # adjacency matrix
