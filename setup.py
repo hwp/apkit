@@ -8,6 +8,7 @@ setup(name='apkit',
       author_email='weipeng.he@idiap.ch',
       license='MIT',
       packages=['apkit'],
+      install_requires=['scipy', 'numpy'],
       include_package_data=True,
       zip_safe=False)
 
