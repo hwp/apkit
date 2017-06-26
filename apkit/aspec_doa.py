@@ -10,7 +10,7 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import numpy as np
 import scipy.ndimage
 
-from .bf import steering_vector
+from .basic import steering_vector
 
 _apply_conv = scipy.ndimage.filters.convolve
 
@@ -70,6 +70,36 @@ def phi_mvdr(ecov, delay):
         denom = np.einsum('cf,cdtf,df->tf', stv.conj(), iecov, stv).real
         assert np.all(denom > 0)            # iecov positive definite
         phi[i] = np.sum(1. / denom, axis=1) # sum over frequency
+
+    return phi
+
+def local_maxima(phi, nlist, th=0.0):
+    """Find local maxima
+
+    Args:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+        nlist : list of list of neighbor indices
+        th    : the score of local maxima should exceed the threshold
+
+    Returns:
+        lmax  : list of local maxima indices, indexed by time.
+    """
+    ndoa, nframe = phi.shape
+    lmax = []
+    for pf in phi.T:
+        lmf = []
+        for i, p in enumerate(pf):
+            if p > th:
+                m = True
+                for n in nlist[i]:
+                    if p <= pf[n]:
+                        m = False
+                        break
+                if m:
+                    lmf.append(i)
+        lmax.append(lmf)
+    return lmax
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4

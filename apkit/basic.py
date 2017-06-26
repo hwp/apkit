@@ -267,11 +267,32 @@ def load_pts_on_sphere(name='p4000'):
         name : should always be 'p4000'
 
     Returns:
-        pts  : array of points
+        pts  : array of points on a unit sphere
     """
     this_dir, this_filename = os.path.split(__file__)
     data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
     return np.load(data_path)
+
+def neighbor_list(pts, dist):
+    """List of neighbors
+
+    Args:
+        pts   : array of points on a unit sphere
+        dist  : distance (rad) threshold
+
+    Returns:
+        nlist : list of list of neighbor indices
+    """
+    # pairwise inner product
+    pip = np.einsum('ik,jk->ij', pts, pts)
+
+    # adjacency matrix
+    amat = pip >= math.cos(dist)
+    for i in xrange(len(pts)):
+        amat[i,i] = False
+
+    # convert to list
+    return [list(np.nonzero(n)[0]) for n in amat]
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
