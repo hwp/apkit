@@ -7,8 +7,10 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
-import numpy as np
+import math
 import wave
+
+import numpy as np
 
 def load_wav(filename):
     """Load wav file, convert to normalized float value
@@ -204,6 +206,58 @@ def snr(sandn, noise):
     pnos = power(noise)
     psig = power(sandn) - pnos
     return 10 * np.log10(psig / pnos)
+
+def steering_vector(delay, nfbin, fs=None):
+    """Steering vector of delay.
+
+    Args:
+        delay : delay of each channel,
+                unit is second if fs is not None, otherwise sample
+        nfbin : number of frequency bins, aka window size
+        fs    : (default None) sample rate
+
+    Returns:
+        stv   : steering vector, indices (cf)
+    """
+    delay = np.asarray(delay)
+    if fs is not None:
+        delay *= fs      # to discrete-time value
+    freq = np.fft.fftfreq(nfbin)
+    return np.exp(-2j * math.pi * np.outer(delay, freq))
+
+def compute_delay(m_pos, doa, c=340.29, fs=None):
+    """Compute delay of signal arrival at microphones.
+
+    Args:
+        m_pos : microphone positions, (M,3) array,
+                M is number of microphones.
+        doa   : direction of arrival, (3,) array or (N,3) array,
+                N is the number of sources.
+        c     : (default 340.29 m/s) speed of sound.
+        fs    : (default None) sample rate.
+
+    Return:
+        delay : delay with reference of arrival at first microphone.
+                first element is always 0.
+                unit is second if fs is None, otherwise sample.
+    """
+    m_pos = np.asarray(m_pos)
+    doa = np.asarray(doa)
+
+    # relative position wrt first microphone
+    r_pos = m_pos - m_pos[0]
+
+    # inner product -> different in time 
+    if doa.ndim == 1:
+        diff = -np.einsum('ij,j->i', r_pos, doa) / c
+    else:
+        assert doa.ndim == 2
+        diff = -np.einsum('ij,kj->ki', r_pos, doa) / c
+
+    if fs is not None:
+        return diff * fs
+    else:
+        return diff
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
