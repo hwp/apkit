@@ -208,23 +208,31 @@ def snr(sandn, noise):
     psig = power(sandn) - pnos
     return 10 * np.log10(psig / pnos)
 
-def steering_vector(delay, nfbin, fs=None):
+def steering_vector(delay, win_size=0, fbins=None, fs=None):
     """Steering vector of delay.
+
+    One and only one of the conditions are true:
+        - win_size != 0
+        - fbins is not None
 
     Args:
         delay : delay of each channel,
                 unit is second if fs is not None, otherwise sample
-        nfbin : number of frequency bins, aka window size
+        nfbin : (default 0) window (FFT) size. If zero, use fbins.
+        fbins : (default None) center of frequency bins, as discrete value.
         fs    : (default None) sample rate
+
 
     Returns:
         stv   : steering vector, indices (cf)
     """
+    assert (win_size != 0) != (fbins is not None)
     delay = np.asarray(delay)
     if fs is not None:
         delay *= fs      # to discrete-time value
-    freq = np.fft.fftfreq(nfbin)
-    return np.exp(-2j * math.pi * np.outer(delay, freq))
+    if fbins is None:
+        fbins = np.fft.fftfreq(win_size)
+    return np.exp(-2j * math.pi * np.outer(delay, fbins))
 
 def compute_delay(m_pos, doa, c=340.29, fs=None):
     """Compute delay of signal arrival at microphones.
@@ -248,7 +256,7 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
     # relative position wrt first microphone
     r_pos = m_pos - m_pos[0]
 
-    # inner product -> different in time 
+    # inner product -> different in time
     if doa.ndim == 1:
         diff = -np.einsum('ij,j->i', r_pos, doa) / c
     else:
@@ -280,7 +288,7 @@ def neighbor_list(pts, dist, scale_z=1.0):
         pts     : array of points on a unit sphere
         dist    : distance (rad) threshold
         scale_z : (default 1.0) scale of z-axis,
-                  if scale_z is smaller than 1, more neighbors will be 
+                  if scale_z is smaller than 1, more neighbors will be
                   along elevation
 
     Returns:

@@ -44,17 +44,20 @@ def empirical_cov_mat(tf, tw=2, fw=2):
     ecov = np.zeros(cov.shape, dtype=cov.dtype)
     for i in xrange(len(tf)):
         for j in xrange(len(tf)):
-            rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest') 
+            rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest')
             ipart = _apply_conv(cov[i,j,:,:].imag, kernel, mode='nearest')
             ecov[i,j,:,:] = rpart + 1j * ipart
     return ecov
 
-def phi_mvdr(ecov, delay):
+def phi_mvdr(ecov, delay, fbins=None):
     """Local angular spectrum function: MVDR
 
     Args:
         ecov  : empirical covariance matrix, indices (cctf)
         delay : the set of delays to probe, indices (dc)
+        fbins : (default None) if fbins is not over all frequencies,
+                use fins to specify centers of frequency bins as discrete
+                values.
 
     Returns:
         phi   : local angular spectrum function, indices (dt),
@@ -70,7 +73,10 @@ def phi_mvdr(ecov, delay):
 
     phi = np.zeros((len(delay), nframe))
     for i in xrange(len(delay)):
-        stv = steering_vector(delay[i], nfbin)
+        if fbins is None:
+            stv = steering_vector(delay[i], nfbin)
+        else:
+            stv = steering_vector(delay[i], fbins=fbins)
         denom = np.einsum('cf,cdtf,df->tf', stv.conj(), iecov, stv).real
         assert np.all(denom > 0)            # iecov positive definite
         phi[i] = np.sum(1. / denom, axis=1) # sum over frequency
