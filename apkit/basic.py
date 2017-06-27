@@ -301,6 +301,21 @@ def neighbor_list(pts, dist, scale_z=1.0):
     # convert to list
     return [list(np.nonzero(n)[0]) for n in amat]
 
+_norm = np.linalg.norm
+
+def angular_distance(a, b):
+    denom = (_norm(a) * _norm(b))
+    if denom < 1e-16:
+        return math.pi
+    sim = np.dot(a, b) / denom
+    if sim > 1.0:
+        return 0.0
+    else:
+        return math.acos(sim)
+
+def azimuth_distance(a, b):
+    return angular_distance(a[:2], b[:2])
+
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
 

@@ -14,7 +14,7 @@ import numpy as np
 import scipy.ndimage
 import scipy.interpolate
 
-from .basic import steering_vector, compute_delay
+from .basic import steering_vector, compute_delay, azimuth_distance
 
 _apply_conv = scipy.ndimage.filters.convolve
 
@@ -77,24 +77,24 @@ def phi_mvdr(ecov, delay):
 
     return phi
 
-def local_maxima(phi, nlist, th=0.0):
+def local_maxima(phi, nlist, th_phi=0.0):
     """Find local maxima
 
     Args:
-        phi   : local angular spectrum function, indices (dt),
-                here 'd' is the index of delay
-        nlist : list of list of neighbor indices
-        th    : the score of local maxima should exceed the threshold
+        phi    : local angular spectrum function, indices (dt),
+                 here 'd' is the index of delay
+        nlist  : list of list of neighbor indices
+        th_phi : the score of local maxima should exceed the threshold
 
     Returns:
-        lmax  : list of local maxima indices, indexed by time.
+        lmax   : list of local maxima indices, indexed by time.
     """
     ndoa, nframe = phi.shape
     lmax = []
     for pf in phi.T:
         lmf = []
         for i, p in enumerate(pf):
-            if p > th:
+            if p > th_phi:
                 m = True
                 for n in nlist[i]:
                     if p <= pf[n]:
@@ -104,6 +104,39 @@ def local_maxima(phi, nlist, th=0.0):
                     lmf.append(i)
         lmax.append(lmf)
     return lmax
+
+def merge_lm_on_azimuth(phi, lmax, doa, th_azi):
+    """Find local maxima
+
+    Args:
+        phi    : local angular spectrum function, indices (dt),
+                 here 'd' is the index of delay
+        lmax   : list of local maxima indices, indexed by time.
+        doa    : set of DOA associated with phi
+        th_azi : neighbor distance in azimuth direction
+
+    Returns:
+        lmax   : refined local maxima
+    """
+    # TODO: chain effect
+    ndoa, nframe = phi.shape
+    nlmax = []
+
+    for t in xrange(nframe):
+        l = np.asarray(lmax[t])
+        n = len(l)
+        m = np.ones(n, dtype=bool)
+        for i in xrange(n - 1):
+            for j in xrange(i + 1, n):
+                # TODO
+                ad = azimuth_distance(doa[l[i]], doa[l[j]])
+                if ad < th_azi:
+                    if phi[l[i], t] >= phi[l[j], t]:
+                        m[j] = False
+                    else:
+                        m[i] = False
+        nlmax.append(list(l[m]))
+    return nlmax
 
 def convert_to_azimuth(phi, doa, agrid, egrid, m_pos):
     """Convert LASF to a function of azimuth by finding the maximum across elevation.
