@@ -83,6 +83,84 @@ def phi_mvdr(ecov, delay, fbins=None):
 
     return phi
 
+def phi_srp_phat(ecov, delay, fbins=None):
+    """Local angular spectrum function: SRP-PHAT
+
+    Args:
+        ecov  : empirical covariance matrix, indices (cctf)
+        delay : the set of delays to probe, indices (dc)
+        fbins : (default None) if fbins is not over all frequencies,
+                use fins to specify centers of frequency bins as discrete
+                values.
+
+    Returns:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+    """
+    # compute inverse of empirical covariance matrix
+    nch, _, nframe, nfbin = ecov.shape
+
+    mask = np.asarray([[c < d for d in xrange(nch)] for c in xrange(nch)])
+    ecov_upper_tri = ecov[mask]
+    cpsd_phat = np.zeros(ecov_upper_tri.shape, dtype=ecov_upper_tri.dtype)
+    ampl = np.abs(ecov_upper_tri)
+    non_zero_mask = ampl > 1e-20
+    cpsd_phat[non_zero_mask] = ecov_upper_tri[non_zero_mask] / ampl[non_zero_mask]
+
+    phi = np.zeros((len(delay), nframe))
+    for i in xrange(len(delay)):
+        if fbins is None:
+            stv = steering_vector(delay[i], nfbin)
+        else:
+            stv = steering_vector(delay[i], fbins=fbins)
+
+        x = np.asarray([stv[c] * stv[d].conj() for c in xrange(nch)
+                                               for d in xrange (nch)
+                                               if c < d])
+        phi[i] = np.einsum('itf,if->t', cpsd_phat, x.conj(),
+                           optimize='optimal').real / nfbin / len(x)
+    return phi
+
+def phi_srp_phat_nonlin(ecov, delay, fbins=None):
+    """Local angular spectrum function: SRP-PHAT non-linear
+
+    Args:
+        ecov  : empirical covariance matrix, indices (cctf)
+        delay : the set of delays to probe, indices (dc)
+        fbins : (default None) if fbins is not over all frequencies,
+                use fins to specify centers of frequency bins as discrete
+                values.
+
+    Returns:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+    """
+    # compute inverse of empirical covariance matrix
+    nch, _, nframe, nfbin = ecov.shape
+
+    mask = np.asarray([[c < d for d in xrange(nch)] for c in xrange(nch)])
+    ecov_upper_tri = ecov[mask]
+    cpsd_phat = np.zeros(ecov_upper_tri.shape, dtype=ecov_upper_tri.dtype)
+    ampl = np.abs(ecov_upper_tri)
+    non_zero_mask = ampl > 1e-20
+    cpsd_phat[non_zero_mask] = ecov_upper_tri[non_zero_mask] / ampl[non_zero_mask]
+
+    phi = np.zeros((len(delay), nframe))
+    for i in xrange(len(delay)):
+        if fbins is None:
+            stv = steering_vector(delay[i], nfbin)
+        else:
+            stv = steering_vector(delay[i], fbins=fbins)
+
+        x = np.asarray([stv[c] * stv[d].conj() for c in xrange(nch)
+                                               for d in xrange (nch)
+                                               if c < d])
+        phi_if = np.einsum('itf,if->itf', cpsd_phat, x.conj(),
+                           optimize='optimal').real
+        phi_nonlin = 1 - np.tanh(2 * np.sqrt(1 - phi_if))
+        phi[i] = np.einsum('itf->t', phi_nonlin, optimize='optimal') / nfbin / len(x)
+    return phi
+
 def local_maxima(phi, nlist, th_phi=0.0):
     """Find local maxima
 

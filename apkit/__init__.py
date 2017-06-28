@@ -9,4 +9,5 @@ from .doa import vec2ae, doa_least_squares
 from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
                 bf_superdir, bf_weight_superdir, bf_weight_superdir_fast
 from .aspec_doa import empirical_cov_mat, local_maxima, \
-                       merge_lm_on_azimuth, convert_to_azimuth, phi_mvdr
+                       merge_lm_on_azimuth, convert_to_azimuth, \
+                       phi_mvdr, phi_srp_phat, phi_srp_phat_nonlin
