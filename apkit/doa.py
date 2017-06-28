@@ -7,25 +7,33 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
-import math
-
 import numpy as np
 import scipy
 
 _TOLERANCE = 1e-13
 
 def vec2ae(v):
-    """Compute the azimuth and elevation of a given vector
+    """Compute the azimuth and elevation of vectors
 
     Args:
-        v : 3D vector
+        v : vector or list of vectors
 
     Returns:
-        azimuth   : angle in radian in the x-y plane
-        elevation : angle in radian from x-y plane to vector
+        if one vector given:
+            azimuth   : angle in radian in the x-y plane
+            elevation : angle in radian from x-y plane to vector
+        else (list of vectors):
+            list of (azimuth, elevation)
     """
-    x, y, z = v
-    return (math.atan2(y, x), math.atan2(z, math.sqrt(x * x + y * y)))
+    v = np.asarray(v)
+    if v.ndim == 1:
+        x, y, z = v
+    else:
+        x = v[:,0]
+        y = v[:,1]
+        z = v[:,2]
+    n = np.sqrt(x ** 2 + y ** 2)
+    return np.asarray([np.arctan2(y, x), np.arctan2(z, n)]).T
 
 def _u_sqr_minus_1(lam, m, tau):
     n, d = m.shape
