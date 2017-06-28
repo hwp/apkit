@@ -77,7 +77,7 @@ def phi_mvdr(ecov, delay, fbins=None):
             stv = steering_vector(delay[i], nfbin)
         else:
             stv = steering_vector(delay[i], fbins=fbins)
-        denom = np.einsum('cf,cdtf,df->tf', stv.conj(), iecov, stv).real
+        denom = np.einsum('cf,cdtf,df->tf', stv.conj(), iecov, stv, optimize='optimal').real
         assert np.all(denom > 0)            # iecov positive definite
         phi[i] = np.sum(1. / denom, axis=1) # sum over frequency
 
@@ -125,11 +125,14 @@ def merge_lm_on_azimuth(phi, lmax, doa, th_azi):
         lmax   : refined local maxima
     """
     # TODO: chain effect
+
     ndoa, nframe = phi.shape
     nlmax = []
 
     for t in xrange(nframe):
-        l = np.asarray(lmax[t])
+        # remove elevation > 70 degrees
+        l = np.asarray([x for x in lmax[t]
+                          if abs(doa[x][2]) < math.pi / 180 * 70])
         n = len(l)
         m = np.ones(n, dtype=bool)
         for i in xrange(n - 1):
