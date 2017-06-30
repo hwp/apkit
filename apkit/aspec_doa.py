@@ -49,6 +49,44 @@ def empirical_cov_mat(tf, tw=2, fw=2):
             ecov[i,j,:,:] = rpart + 1j * ipart
     return ecov
 
+def phi_mvdr_snr(ecov, delay, fbins=None):
+    """Local angular spectrum function: MVDR (SNR)
+
+    Args:
+        ecov  : empirical covariance matrix, indices (cctf)
+        delay : the set of delays to probe, indices (dc)
+        fbins : (default None) if fbins is not over all frequencies,
+                use fins to specify centers of frequency bins as discrete
+                values.
+
+    Returns:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+    """
+    # compute inverse of empirical covariance matrix
+    eta = 1e-10
+    nch, _, nframe, nfbin = ecov.shape
+    iecov = np.zeros(ecov.shape, dtype=ecov.dtype)
+    for i in xrange(nframe):
+        for j in xrange(nfbin):
+            iecov[:,:,i,j] = np.asmatrix(ecov[:,:,i,j] + np.eye(nch) * eta).I
+
+    # total power: trace mean
+    tpow = np.einsum('cctf->tf', ecov).real / nch + eta
+
+    phi = np.zeros((len(delay), nframe))
+    for i in xrange(len(delay)):
+        if fbins is None:
+            stv = steering_vector(delay[i], nfbin)
+        else:
+            stv = steering_vector(delay[i], fbins=fbins)
+        denom = np.einsum('cf,cdtf,df->tf', stv.conj(), iecov, stv, optimize='optimal').real
+        assert np.all(denom > 0)                    # iecov positive definite
+        isnr = np.maximum(tpow * denom - 1.0, eta)  # 1 / snr
+        phi[i] = np.sum(1. / isnr, axis=1) / nfbin  # average over frequency
+
+    return phi
+
 def phi_mvdr(ecov, delay, fbins=None):
     """Local angular spectrum function: MVDR
 
@@ -157,7 +195,7 @@ def phi_srp_phat_nonlin(ecov, delay, fbins=None):
                                                if c < d])
         phi_if = np.einsum('itf,if->itf', cpsd_phat, x.conj(),
                            optimize='optimal').real
-        phi_nonlin = 1 - np.tanh(2 * np.sqrt(1 - phi_if))
+        phi_nonlin = 1 - np.tanh(2 * np.sqrt(1 - np.minimum(phi_if, 1.0)))
         phi[i] = np.einsum('itf->t', phi_nonlin, optimize='optimal') / nfbin / len(x)
     return phi
 
