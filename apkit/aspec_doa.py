@@ -248,7 +248,7 @@ def merge_lm_on_azimuth(phi, lmax, doa, th_azi):
     for t in xrange(nframe):
         # remove elevation > 70 degrees
         l = np.asarray([x for x in lmax[t]
-                          if abs(doa[x][2]) < math.pi / 180 * 70])
+                          if abs(doa[x][2]) < math.sin(math.pi / 180 * 70)])
         n = len(l)
         m = np.ones(n, dtype=bool)
         for i in xrange(n - 1):
