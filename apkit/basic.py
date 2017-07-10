@@ -324,6 +324,67 @@ def angular_distance(a, b):
 def azimuth_distance(a, b):
     return angular_distance(a[:2], b[:2])
 
+def mel(f):
+    """Mel function
+
+    Args:
+        f : frequency in Hz
+
+    Returns:
+        m : mel scale
+    """
+    return 1125.0 * np.log(1.0 + f / 700.0)
+
+def mel_inv(m):
+    """inverse mel function
+
+    Args:
+        m : mel scale
+
+    Returns:
+        f : frequency in Hz
+    """
+    return 700.0 * (np.exp(m / 1125.0) - 1.0)
+
+def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
+    """Mel-freqency filter banks weights
+
+    Args:
+        n    : number of filter banks
+        freq : center of frequency bins as discrete value (-0.5 ~ 0.5),
+               can be computed by numpy.fft.fftfreq
+        fs   : sample rate
+        fmax : maximal frequency in Hz
+        fmin : (default 0) minimal frequency in Hz
+
+    Returns:
+        fwt  : filtered bank weights, indexed by 'bf'.
+               'b' is the index of filter bank.
+    """
+    mmax = mel(fmax)
+    mmin = mel(fmin)
+    mls = np.linspace(mmin, mmax, n + 2)
+    fls = mel_inv(mls)
+    fwt = np.zeros((n, len(freq)))
+    freq = np.abs(fs * freq)
+
+    # per bank
+    for i in xrange(n):
+        # left slope
+        left = (freq - fls[i]) / (fls[i+1] - fls[i])
+        left[left < 0.0] = 0.0
+        left[left > 1.0] = 0.0
+        # right slope
+        right = (fls[i + 2] - freq) / (fls[i+2] - fls[i+1])
+        right[right < 0.0] = 0.0
+        right[right >= 1.0] = 0.0
+        # sum
+        fwt[i] = left + right
+
+    assert np.min(fwt) == 0.0
+    assert np.max(fwt) <= 1.0
+    return fwt
+
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
 
