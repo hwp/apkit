@@ -358,14 +358,14 @@ def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
         fmin : (default 0) minimal frequency in Hz
 
     Returns:
-        fwt  : filtered bank weights, indexed by 'bf'.
+        fbw  : filter bank weights, indexed by 'bf'.
                'b' is the index of filter bank.
     """
     mmax = mel(fmax)
     mmin = mel(fmin)
     mls = np.linspace(mmin, mmax, n + 2)
     fls = mel_inv(mls)
-    fwt = np.zeros((n, len(freq)))
+    fbw = np.zeros((n, len(freq)))
     freq = np.abs(fs * freq)
 
     # per bank
@@ -379,11 +379,11 @@ def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
         right[right < 0.0] = 0.0
         right[right >= 1.0] = 0.0
         # sum
-        fwt[i] = left + right
+        fbw[i] = left + right
 
-    assert np.min(fwt) == 0.0
-    assert np.max(fwt) <= 1.0
-    return fwt
+    assert np.min(fbw) == 0.0
+    assert np.max(fbw) <= 1.0
+    return fbw
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4

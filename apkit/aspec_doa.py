@@ -23,10 +23,10 @@ def empirical_cov_mat(tf, tw=2, fw=2):
 
     Args:
         tf  : multi-channel time-frequency domain signal, indices (ctf)
-        tw  : (default 1) half width of neighbor area in time domain,
-              excluding center
-        fw  : (default 1) half width of neighbor area in freq domain,
-              excluding center
+        tw  : (default 2) half width of neighbor area in time domain,
+              including center
+        fw  : (default 2) half width of neighbor area in freq domain,
+              including center
 
     Returns:
         ecov: empirical covariance matrix, indices (cctf)
