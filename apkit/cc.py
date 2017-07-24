@@ -14,7 +14,7 @@ import numpy as np
 
 from .basic import freq_upsample
 
-def gcc_phat(x, y, upsample=1, noise_cpsd=None):
+def gcc_phat(x, y, upsample=1, noise_cpsd=None, eps=0.0):
     """GCC-PHAT
 
     Args:
@@ -23,6 +23,9 @@ def gcc_phat(x, y, upsample=1, noise_cpsd=None):
         upsample : an integer indicating factor of upsampling.
                    default value is 1.
         noise_cpsd : noise cross power spectral density
+        eps      : (default 0.0) small constant added to denominator for
+                   numerical stability, as well as to suppress low engergy
+                   bins.
 
     Returns:
         cc : cross correlation of the two signal, 1-d array,
@@ -32,12 +35,15 @@ def gcc_phat(x, y, upsample=1, noise_cpsd=None):
     if noise_cpsd is not None:
         cpsd = cpsd - noise_cpsd
     # phat transform
-    cpsd_phat = cpsd * 1.0      # copy
-    cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
+    if eps <= 0.0:
+        cpsd_phat = cpsd * 1.0      # copy
+        cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
+    else:
+        cpsd_phat = cpsd / (np.abs(cpsd) + eps)
     cpsd_phat = freq_upsample(cpsd_phat, upsample)
     return np.real(np.fft.ifft(cpsd_phat))
 
-def gcc_phat_fbanks(ecov, fbw, zoom, freq=None):
+def gcc_phat_fbanks(ecov, fbw, zoom, freq=None, eps=0.0):
     """GCC-PHAT on filter banks
 
     Args:
@@ -45,10 +51,12 @@ def gcc_phat_fbanks(ecov, fbw, zoom, freq=None):
         fbw  : filter bank weights, indexed by bf
                possibly computed by mel_freq_fbank_weight
         zoom : number of center coefficients on each side, excluding center
-
         freq : (default None) center of frequency bins as discrete
                value (-0.5 ~ 0.5). By default it is computed by 
                numpy.fft.fftfreq with fft size
+        eps  : (default 0.0) small constant added to denominator for
+               numerical stability, as well as to suppress low engergy
+               bins.
     Return:
         fbcc : pairwise GCC-PHAT on filter banks,
                dictionary with keys same as pairwise_cc.
@@ -69,8 +77,11 @@ def gcc_phat_fbanks(ecov, fbw, zoom, freq=None):
         for j in xrange(i + 1, nch):
             # phase transform on CPSD
             cpsd = ecov[i, j]
-            cpsd_phat = cpsd * 1.0      # copy
-            cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
+            if eps <= 0.0:
+                cpsd_phat = cpsd * 1.0      # copy
+                cpsd_phat[cpsd != 0] /= np.abs(cpsd[cpsd != 0])
+            else:
+                cpsd_phat = cpsd / (np.abs(cpsd) + eps)
 
             # weighted sum
             '''
@@ -110,7 +121,7 @@ def cc_across_time(tfx, tfy, cc_func, cc_args=()):
         x        : 1-d array, frequency domain signal 1
         y        : 1-d array, frequency domain signal 2
         cc_func  : cross correlation function.
-        cc_args : extra arguments of cc_func.
+        cc_args  : list of extra arguments of cc_func.
 
     Returns:
         cc_atime : cross correlation at different time.
