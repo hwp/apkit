@@ -215,15 +215,14 @@ def local_maxima(phi, nlist, th_phi=0.0):
     lmax = []
     for pf in phi.T:
         lmf = []
-        for i, p in enumerate(pf):
-            if p > th_phi:
-                m = True
-                for n in nlist[i]:
-                    if p <= pf[n]:
-                        m = False
-                        break
-                if m:
-                    lmf.append(i)
+        ph_sort = sorted(enumerate(pf), key=(lambda x : x[1]), reverse=True)
+        ig_set = set()
+        for i, p in ph_sort:
+            if p <= th_phi:
+                break
+            if i not in ig_set:
+                lmf.append(i)
+                ig_set.update(nlist[i])
         lmax.append(lmf)
     return lmax
 
