@@ -225,6 +225,7 @@ def local_maxima(phi, nlist, th_phi=0.0):
                 for n in nlist[i]:
                     if p < pf[n]:
                         is_max = False
+                        break
                 if is_max:
                     lmf.append(i)
                 ig_set.update(nlist[i])
