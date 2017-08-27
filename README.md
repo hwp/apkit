@@ -19,3 +19,8 @@ Conventions
 
 * Arrays are numpy arrays.
 * Multi-dimension array indices follow such order (if exist): channel, time, frequency.
+
+Install
+-------
+
+pip install -e .

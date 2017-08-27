@@ -49,6 +49,28 @@ def empirical_cov_mat(tf, tw=2, fw=2):
             ecov[i,j,:,:] = rpart + 1j * ipart
     return ecov
 
+def empirical_cov_mat_by_block(tf, block_size, block_hop):
+    """Empirical covariance matrix by blocks
+
+    Args:
+        tf  : multi-channel time-frequency domain signal, indices (ctf)
+        block_size : number of frames in one block
+        block_hop  : number of frame shifts between blocks
+
+    Returns:
+        ecov: empirical covariance matrix, indices (cctf)
+    """
+    nch, nframe, nfbin = tf.shape
+
+    # covariance matrix
+    cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
+
+    # average in blocks
+    ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
+                for t in xrange(0, nframe - block_size, block_hop)]
+    ecov = np.moveaxis(np.asarray(ecov), 0, 2)
+    return ecov
+
 def phi_mvdr_snr(ecov, delay, fbins=None):
     """Local angular spectrum function: MVDR (SNR)
 
