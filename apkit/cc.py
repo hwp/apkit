@@ -134,7 +134,7 @@ def cc_across_time(tfx, tfy, cc_func, cc_args=()):
 
 def pairwise_cc(tf, cc_func, cc_args=()):
     """Pairwise cross correlations between all channels in signal.
-    
+
     Args:
         tf      : multi-channel time-frequency domain signal.
         cc_func : cross correlation function.
@@ -175,11 +175,10 @@ def cov_matrix(tf):
         tf  : multi-channel time-frequency domain signal.
 
     Returns:
-        cov : covariance matrix,
-              indices: [frequency, channel, channel]
+        cov : covariance matrix, indexed by (ccf)
     """
     nch, nframe, nfbin = tf.shape
-    return np.einsum('itf,jtf->fij', tf, tf.conj()) / float(nframe)
+    return np.einsum('itf,jtf->ijf', tf, tf.conj()) / float(nframe)
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4

@@ -230,7 +230,7 @@ class MUSIC:
         Args:
             ncov : noise spatial covariance matrix, indexed by (ccf)
         """
-        self.ncov = self.ncov
+        self.ncov = ncov
 
     def phi(self, ecov, delay, fbins=None):
         """Local angular spectrum function: MUSIC
@@ -247,9 +247,9 @@ class MUSIC:
                     here 'd' is the index of delay
         """
         nch, _, nframe, nfbin = ecov.shape
-        phi = np.zeros(len(delay), nframe)
+        phi = np.zeros((len(delay), nframe))
         for t in xrange(nframe):
-            neigs=np.zeros(nfbin, nch, nch-1)
+            neigs=np.zeros((nfbin, nch, nch-1), dtype=ecov.dtype)
             for f in xrange(nfbin):
                 w, v = scipy.linalg.eigh(ecov[:,:,t,f], self.ncov[:,:,f],
                                          eigvals=(0, nch-2))
@@ -261,9 +261,10 @@ class MUSIC:
                 else:
                     stv = steering_vector(delay[i], fbins=fbins)
                 x = np.einsum('fcd,cf->df', neigs.conj(), stv)
-                xx = np.einsum('df,df->f', x.conj(), x)
+                xx = np.einsum('df,df->f', x.conj(), x).real
                 phi[i,t] = np.sum(1.0 * nch / xx)
-                            
+
+        return phi
 
 def local_maxima(phi, nlist, th_phi=0.0):
     """Find local maxima
