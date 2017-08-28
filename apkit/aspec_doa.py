@@ -67,7 +67,7 @@ def empirical_cov_mat_by_block(tf, block_size, block_hop):
 
     # average in blocks
     ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
-                for t in xrange(0, nframe - block_size, block_hop)]
+                for t in xrange(0, nframe - block_size + 1, block_hop)]
     ecov = np.moveaxis(np.asarray(ecov), 0, 2)
     return ecov
 
@@ -220,6 +220,50 @@ def phi_srp_phat_nonlin(ecov, delay, fbins=None):
         phi_nonlin = 1 - np.tanh(2 * np.sqrt(1 - np.minimum(phi_if, 1.0)))
         phi[i] = np.einsum('itf->t', phi_nonlin, optimize='optimal') / nfbin / len(x)
     return phi
+
+class MUSIC:
+    """MUSIC
+    """
+
+    def __init__(self, ncov):
+        """
+        Args:
+            ncov : noise spatial covariance matrix, indexed by (ccf)
+        """
+        self.ncov = self.ncov
+
+    def phi(self, ecov, delay, fbins=None):
+        """Local angular spectrum function: MUSIC
+
+        Args:
+            ecov  : empirical covariance matrix, indices (cctf)
+            delay : the set of delays to probe, indices (dc)
+            fbins : (default None) if fbins is not over all frequencies,
+                    use fins to specify centers of frequency bins as discrete
+                    values.
+
+        Returns:
+            phi   : local angular spectrum function, indices (dt),
+                    here 'd' is the index of delay
+        """
+        nch, _, nframe, nfbin = ecov.shape
+        phi = np.zeros(len(delay), nframe)
+        for t in xrange(nframe):
+            neigs=np.zeros(nfbin, nch, nch-1)
+            for f in xrange(nfbin):
+                w, v = scipy.linalg.eigh(ecov[:,:,t,f], self.ncov[:,:,f],
+                                         eigvals=(0, nch-2))
+                neigs[f] = v
+
+            for i in xrange(len(delay)):
+                if fbins is None:
+                    stv = steering_vector(delay[i], nfbin)
+                else:
+                    stv = steering_vector(delay[i], fbins=fbins)
+                x = np.einsum('fcd,cf->df', neigs.conj(), stv)
+                xx = np.einsum('df,df->f', x.conj(), x)
+                phi[i,t] = np.sum(1.0 * nch / xx)
+                            
 
 def local_maxima(phi, nlist, th_phi=0.0):
     """Find local maxima
