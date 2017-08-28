@@ -232,7 +232,7 @@ class MUSIC:
         """
         self.ncov = ncov
 
-    def phi(self, ecov, delay, fbins=None):
+    def __call__(self, ecov, delay, fbins=None):
         """Local angular spectrum function: MUSIC
 
         Args:
