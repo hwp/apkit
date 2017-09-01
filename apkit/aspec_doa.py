@@ -253,7 +253,7 @@ class MUSIC:
             for f in xrange(nfbin):
                 w, v = scipy.linalg.eigh(ecov[:,:,t,f], self.ncov[:,:,f],
                                          eigvals=(0, nch-2))
-                neigs[f] = v / np.norm(v, axis=0, keepdims=True)
+                neigs[f] = v / np.linalg.norm(v, axis=0, keepdims=True)
 
             for i in xrange(len(delay)):
                 if fbins is None:
