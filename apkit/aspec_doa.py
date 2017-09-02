@@ -221,9 +221,145 @@ def phi_srp_phat_nonlin(ecov, delay, fbins=None):
         phi[i] = np.einsum('itf->t', phi_nonlin, optimize='optimal') / nfbin / len(x)
     return phi
 
+class MVDR_NCOV:
+    """MVDR with known noise covariance matrix"""
+
+    def __init__(self, ncov):
+        """
+        Args:
+            ncov : noise spatial covariance matrix, indexed by (ccf)
+        """
+        self.incov = np.moveaxis(np.linalg.inv(np.moveaxis(ncov, 2, 0)),
+                                 0, 2)
+
+    def __call__(self, ecov, delay, fbins=None):
+        """Local angular spectrum function: MVDR-NCOV
+
+        Args:
+            ecov  : empirical covariance matrix, indices (cctf)
+            delay : the set of delays to probe, indices (dc)
+            fbins : (default None) if fbins is not over all frequencies,
+                    use fins to specify centers of frequency bins as discrete
+                    values.
+
+        Returns:
+            phi   : local angular spectrum function, indices (dt),
+                    here 'd' is the index of delay
+        """
+        nch, _, nframe, nfbin = ecov.shape
+        phi = np.zeros((len(delay), nframe))
+        for i in xrange(len(delay)):
+            if fbins is None:
+                stv = steering_vector(delay[i], nfbin)
+            else:
+                stv = steering_vector(delay[i], fbins=fbins)
+            w = np.einsum('cdf,df->cf', self.incov, stv)
+            n = np.einsum('cf,cf->f', stv.conj(), w)
+            w = np.einsum('cf,f->cf', w, 1.0 / n)
+            phi[i] = np.einsum('cf,cdtf,df->t', w.conj(), ecov, w,
+                               optimize='optimal').real
+
+        return phi
+
+class MVDR_NCOV_SNR:
+    """MVDR with known noise covariance matrix"""
+
+    def __init__(self, ncov):
+        """
+        Args:
+            ncov : noise spatial covariance matrix, indexed by (ccf)
+        """
+        self.incov = np.moveaxis(np.linalg.inv(np.moveaxis(ncov, 2, 0)),
+                                 0, 2)
+
+    def __call__(self, ecov, delay, fbins=None):
+        """Local angular spectrum function: MVDR-NCOV
+
+        Args:
+            ecov  : empirical covariance matrix, indices (cctf)
+            delay : the set of delays to probe, indices (dc)
+            fbins : (default None) if fbins is not over all frequencies,
+                    use fins to specify centers of frequency bins as discrete
+                    values.
+
+        Returns:
+            phi   : local angular spectrum function, indices (dt),
+                    here 'd' is the index of delay
+        """
+        nch, _, nframe, nfbin = ecov.shape
+        phi = np.zeros((len(delay), nframe))
+
+        # total power
+        pt = np.einsum('cctf->tf', ecov).real
+
+        for i in xrange(len(delay)):
+            if fbins is None:
+                stv = steering_vector(delay[i], nfbin)
+            else:
+                stv = steering_vector(delay[i], fbins=fbins)
+            w = np.einsum('cdf,df->cf', self.incov, stv)
+            pn = 1.0 / np.einsum('cf,cf->f', stv.conj(), w).real
+            # beamformer weight
+            w = np.einsum('cf,f->cf', w, pn)
+            # signal power
+            ps = np.einsum('cf,cdtf,df->tf', w.conj(), ecov, w,
+                           optimize='optimal').real
+            # residual power
+            pn = np.maximum(pt - ps, 1e-10)
+            # snr
+            phi[i] = np.einsum('tf,tf->t', ps, 1.0 / pn)
+
+        return phi
+
+class MVDR_NCOV_SIG:
+    """MVDR with known noise covariance matrix"""
+
+    def __init__(self, ncov):
+        """
+        Args:
+            ncov : noise spatial covariance matrix, indexed by (ccf)
+        """
+        self.incov = np.moveaxis(np.linalg.inv(np.moveaxis(ncov, 2, 0)),
+                                 0, 2)
+
+    def __call__(self, ecov, delay, fbins=None):
+        """Local angular spectrum function: MVDR-NCOV
+
+        Args:
+            ecov  : empirical covariance matrix, indices (cctf)
+            delay : the set of delays to probe, indices (dc)
+            fbins : (default None) if fbins is not over all frequencies,
+                    use fins to specify centers of frequency bins as discrete
+                    values.
+
+        Returns:
+            phi   : local angular spectrum function, indices (dt),
+                    here 'd' is the index of delay
+        """
+        nch, _, nframe, nfbin = ecov.shape
+        phi = np.zeros((len(delay), nframe))
+        for i in xrange(len(delay)):
+            if fbins is None:
+                stv = steering_vector(delay[i], nfbin)
+            else:
+                stv = steering_vector(delay[i], fbins=fbins)
+            w = np.einsum('cdf,df->cf', self.incov, stv)
+            # noise power
+            pn = 1.0 / np.einsum('cf,cf->f', stv.conj(), w).real
+            # beamformer weight
+            w = np.einsum('cf,f->cf', w, pn)
+            # total power
+            pt = np.einsum('cf,cdtf,df->tf', w.conj(), ecov, w,
+                           optimize='optimal').real
+            # signal power
+            ps = pt - pn
+            # snr
+            phi[i] = np.einsum('tf->t', ps)
+
+        return phi
+
 class MUSIC:
-    """MUSIC
-    """
+    """MUSIC"""
 
     def __init__(self, ncov):
         """
@@ -267,8 +403,7 @@ class MUSIC:
         return phi
 
 class GSVD_MUSIC:
-    """GSVD-MUSIC
-    """
+    """GSVD-MUSIC"""
 
     def __init__(self, ncov):
         """

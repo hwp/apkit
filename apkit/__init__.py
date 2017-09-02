@@ -12,4 +12,5 @@ from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
 from .aspec_doa import empirical_cov_mat, empirical_cov_mat_by_block, \
                        local_maxima, merge_lm_on_azimuth, convert_to_azimuth, \
                        phi_mvdr, phi_srp_phat, phi_srp_phat_nonlin, \
-                       phi_mvdr_snr, MUSIC, GSVD_MUSIC
+                       phi_mvdr_snr, MUSIC, GSVD_MUSIC, MVDR_NCOV, \
+                       MVDR_NCOV_SNR, MVDR_NCOV_SIG
