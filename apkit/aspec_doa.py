@@ -266,6 +266,49 @@ class MUSIC:
 
         return phi
 
+class GSVD_MUSIC:
+    """GSVD-MUSIC
+    """
+
+    def __init__(self, ncov):
+        """
+        Args:
+            ncov : noise spatial covariance matrix, indexed by (ccf)
+        """
+        self.incov = np.moveaxis(np.linalg.inv(np.moveaxis(ncov, 2, 0)),
+                                 0, 2)
+
+    def __call__(self, ecov, delay, fbins=None):
+        """Local angular spectrum function: GSVD-MUSIC
+
+        Args:
+            ecov  : empirical covariance matrix, indices (cctf)
+            delay : the set of delays to probe, indices (dc)
+            fbins : (default None) if fbins is not over all frequencies,
+                    use fins to specify centers of frequency bins as discrete
+                    values.
+
+        Returns:
+            phi   : local angular spectrum function, indices (dt),
+                    here 'd' is the index of delay
+        """
+        nch, _, nframe, nfbin = ecov.shape
+        phi = np.zeros((len(delay), nframe))
+        for t in xrange(nframe):
+            u, s, v = np.linalg.svd(np.einsum('cdf,def->fce', self.incov, ecov[:,:,t,:]))
+            u = u[:,:,1:]   # assume one source
+
+            for i in xrange(len(delay)):
+                if fbins is None:
+                    stv = steering_vector(delay[i], nfbin)
+                else:
+                    stv = steering_vector(delay[i], fbins=fbins)
+                x = np.einsum('fcd,cf->df', u.conj(), stv)
+                xx = np.einsum('df,df->f', x.conj(), x).real
+                phi[i,t] = np.sum(1.0 * nch / xx)
+
+        return phi
+
 def local_maxima(phi, nlist, th_phi=0.0):
     """Find local maxima
 
