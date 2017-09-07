@@ -118,8 +118,8 @@ def cc_across_time(tfx, tfy, cc_func, cc_args=()):
     """Cross correlations across time.
 
     Args:
-        x        : 1-d array, frequency domain signal 1
-        y        : 1-d array, frequency domain signal 2
+        tfx      : time-frequency domain signal 1
+        tfy      : time-frequency domain signal 2
         cc_func  : cross correlation function.
         cc_args  : list of extra arguments of cc_func.
 
