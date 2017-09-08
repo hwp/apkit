@@ -358,6 +358,38 @@ class MVDR_NCOV_SIG:
 
         return phi
 
+
+def sevd_music(ecov, delay, fbins=None):
+    """Local angular spectrum function: SEVD-MUSIC
+
+    Args:
+        ecov  : empirical covariance matrix, indices (cctf)
+        delay : the set of delays to probe, indices (dc)
+        fbins : (default None) if fbins is not over all frequencies,
+                use fins to specify centers of frequency bins as discrete
+                values.
+
+    Returns:
+        phi   : local angular spectrum function, indices (dt),
+                here 'd' is the index of delay
+    """
+    nch, _, nframe, nfbin = ecov.shape
+    phi = np.zeros((len(delay), nframe))
+    for t in xrange(nframe):
+        w, v = np.linalg.eigh(np.moveaxis(ecov[:,:,t], 2, 0))
+        v = v[:,:,:-1]   # assume one source
+
+        for i in xrange(len(delay)):
+            if fbins is None:
+                stv = steering_vector(delay[i], nfbin)
+            else:
+                stv = steering_vector(delay[i], fbins=fbins)
+            x = np.einsum('fcd,cf->df', v.conj(), stv)
+            xx = np.einsum('df,df->f', x.conj(), x).real
+            phi[i,t] = np.sum(1.0 * nch / xx)
+
+    return phi
+
 class MUSIC:
     """MUSIC"""
 
