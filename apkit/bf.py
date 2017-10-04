@@ -39,7 +39,7 @@ def bf_weight_delay_sum(nfbin, delay, fs=None):
     nch = len(delay)
 
     # beamforming weight: delay and normalize
-    return steering_vector(delay, nfbin, fs) / float(nch)
+    return steering_vector(delay, nfbin, fs=fs) / float(nch)
 
 def bf_delay_sum(tf, delay, fs=None):
     """Apply delay-sum beamformer to signals.
