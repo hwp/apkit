@@ -78,7 +78,7 @@ def bf_weight_superdir_fast(nfbin, delay, ninv, fs=None):
         res   : filtered signal in time-frequency domain.
     """
     # steering vector
-    stv = steering_vector(delay, nfbin, fs)
+    stv = steering_vector(delay, nfbin, fs=fs)
 
     # beamforming weight
     numerator = np.einsum('fcd,df->cf', ninv, stv)
