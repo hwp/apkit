@@ -13,7 +13,7 @@ import wave
 
 import numpy as np
 
-def load_wav(filename):
+def load_wav(filename, offset=0, nsamples=-1):
     """Load wav file, convert to normalized float value
 
     Args:
@@ -35,7 +35,11 @@ def load_wav(filename):
         dtype = np.int32
     else:
         assert False
-    data = np.fromstring(w.readframes(w.getnframes()), dtype=dtype)
+    if offset > 0:
+        w.setpos(offset)
+    if nsamples < 0:
+        nsamples = w.getnframes()
+    data = np.fromstring(w.readframes(nsamples), dtype=dtype)
     data = data.reshape((-1, nchs))
     if not np.issubdtype(data.dtype, np.float):
         assert np.issubdtype(data.dtype, np.integer)
