@@ -93,7 +93,7 @@ def cola_rectangle(win_size, hop_size):
     """
     return np.ones(win_size) * hop_size / win_size
 
-def stft(signal, window, win_size, hop_size):
+def stft(signal, window, win_size, hop_size, last_sample=False):
     """Convert time-domain signal to time-frequency domain.
 
     Args:
@@ -101,6 +101,8 @@ def stft(signal, window, win_size, hop_size):
         window   : window function, see cola_hamming as example.
         win_size : window size
         hop_size : hop size
+        last_sample : include last sample, by default (due to legacy bug),
+                      the last sample is not included.
 
     Returns:
         tf       : multi-channel time-frequency domain signal.
@@ -108,7 +110,7 @@ def stft(signal, window, win_size, hop_size):
     assert signal.ndim == 2
     w = window(win_size, hop_size)
     return np.array([[np.fft.fft(c[t:t+win_size] * w)
-        for t in xrange(0, len(c) - win_size, hop_size)] for c in signal])
+        for t in xrange(0, len(c) - win_size + (1 if last_sample else 0), hop_size)] for c in signal])
 
 def istft(tf, hop_size):
     """Inverse STFT
