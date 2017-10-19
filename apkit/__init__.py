@@ -2,7 +2,8 @@ from .basic import load_wav, save_wav, stft, istft, cola_hamming, \
                    cola_rectangle, freq_upsample, power, power_tf, snr, \
                    steering_vector, compute_delay, load_pts_on_sphere, \
                    neighbor_list, angular_distance, azimuth_distance, \
-                   mel, mel_inv, mel_freq_fbank_weight
+                   mel, mel_inv, mel_freq_fbank_weight, \
+                   vad_by_threshold
 from .cc import gcc_phat, cross_correlation, cc_across_time, \
                 pairwise_cc, pairwise_cpsd, cov_matrix, gcc_phat_fbanks
 from .tdoa import single_tdoa, tdoa_hist, tdoa_sum, pairwise_tdoa

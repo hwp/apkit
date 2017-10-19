@@ -391,6 +391,36 @@ def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
     assert np.max(fbw) <= 1.0
     return fbw
 
+def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
+    """Voice Activity Detection by threshold
+
+    Args:
+        fs       : sample rate.
+        signal   : multi-channel time-domain signal.
+        vadrate  : output vad rate
+        threshold_db : threshold in decibel
+        neighbor_size : half size of (excluding center) neighbor area
+
+    Returns:
+        vad      : VAD label (0: silence, 1: active)
+    """
+    nch, nsamples = sig.shape
+    nframes = nsamples * vadrate / fs
+    fpower = np.zeros((nch, nframes)) # power at frame level
+    for i in xrange(nframes):
+        fpower[:, i] = power(sig[:, (i*fs/vadrate):((i+1)*fs/vadrate)])
+
+    # average power in neighbor area
+    if neighbor_size == 0:
+        apower = fpower
+    else:
+        apower = np.zeros((nch, nframes))
+        for i in xrange(nframes):
+            apower[:, i] = np.mean(fpower[:, max(0,i-neighbor_size):
+                                          min(nframes,i+neighbor_size+1)],
+                                   axis=1)
+    return (apower > 10.0 ** (threshold_db / 10.0)).astype(int)
+
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
 
