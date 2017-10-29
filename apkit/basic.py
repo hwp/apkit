@@ -224,7 +224,7 @@ def steering_vector(delay, win_size=0, fbins=None, fs=None):
     Args:
         delay : delay of each channel,
                 unit is second if fs is not None, otherwise sample
-        nfbin : (default 0) window (FFT) size. If zero, use fbins.
+        win_size : (default 0) window (FFT) size. If zero, use fbins.
         fbins : (default None) center of frequency bins, as discrete value.
         fs    : (default None) sample rate
 
