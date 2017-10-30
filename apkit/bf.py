@@ -23,23 +23,51 @@ def apply_beamforming(tf, bf_wt):
     """
     return np.einsum('ctf,cf->tf', tf, bf_wt.conj())
 
-def bf_weight_delay_sum(win_size, delay, fs=None):
-    """Compute weight of delay-sum beamformer
+class _BfWeightDelaySum:
+    def need_cov(self):
+        return False
 
-    Args:
-        win_size : number of frequency bins
-        delay : delay of each channel. If fs is given, value denotes
-                delay in second (continuous-time) ,
-                otherwise # of samples (discrete-time).
-        fs    : sample rate. Default is None, @see delay.
+    def __call__(self, stv, cov=None):
+        """Compute weight of delay-sum beamformer
 
-    Returns:
-        bf_wt : beamforming weight, indexed by (cf)
-    """
-    nch = len(delay)
+        Args:
+            stv  : steering vector, indexed by (cf)
+            cov  : covariance matrix, not used by this function
 
-    # beamforming weight: delay and normalize
-    return steering_vector(delay, win_size, fs=fs) / float(nch)
+        Returns:
+            bf_wt : beamforming weight, indexed by (cf)
+        """
+        return stv / float(len(stv))
+
+bf_weight_delay_sum = _BfWeightDelaySum()
+
+class _BfWeightMvdr:
+    def need_cov(self):
+        return True
+
+    def __call__(self, stv, cov):
+        """Compute weight of delay-sum beamformer
+
+        Args:
+            stv  : steering vector, indexed by (cf)
+            cov  : covariance matrix, indexed by (ccf)
+
+        Returns:
+            bf_wt : beamforming weight, indexed by (cf)
+        """
+        # move frequency axis to first and diagonal correction
+        cov_fcc = np.moveaxis(cov, -1, 0) + np.eye(len(stv)) * 1e-15
+
+        # R^-1 a
+        rinva = np.linalg.solve(cov_fcc, np.moveaxis(stv, -1, 0))
+
+        # a^H R^-1 a
+        ahrinva = np.einsum('cf,fc->f', stv.conj(), rinva)
+
+        # 1 / (a^H R^-1 * a) * (R^-1 a)
+        return np.einsum('f,fc->cf', 1.0 / ahrinva, rinva)
+
+bf_weight_mvdr = _BfWeightMvdr()
 
 def bf_delay_sum(tf, delay, fs=None):
     """Apply delay-sum beamformer to signals.
@@ -55,10 +83,13 @@ def bf_delay_sum(tf, delay, fs=None):
         res   : filtered signal in time-frequency domain.
     """
     tf = np.asarray(tf)
-    _, _, win_size = tf.shape
+    nch, _, win_size = tf.shape
+
+    # steering vector
+    stv = steering_vector(delay, win_size, fs=fs)
 
     # transfer function of delay filter
-    bf_wt = bf_weight_delay_sum(win_size, delay, fs)
+    bf_wt = bf_weight_delay_sum(stv)
 
     # apply transfer function and sum along channels
     return apply_beamforming(tf, bf_wt)
@@ -85,7 +116,7 @@ def bf_weight_superdir_fast(win_size, delay, ninv, fs=None):
     denominator = np.einsum('cf,cf->f', stv.conj(), numerator)
     return np.einsum('cf,f->cf', numerator, 1.0 / denominator)
 
-def bf_weight_superdir(win_size, delay, ncov, fs=None):
+def bf_weight_superdir(win_size, delay, cov, fs=None):
     """Compute weight of MVDR beamformer
 
     Args:
@@ -93,7 +124,7 @@ def bf_weight_superdir(win_size, delay, ncov, fs=None):
         delay : delay of each channel. If fs is given, value denotes
                 delay in second (continuous-time) ,
                 otherwise # of samples (discrete-time).
-        ncov  : noise covariance
+        cov   : covariance matrix, indexed by (ccf)
         fs    : sample rate. Default is None, @see delay.
 
     Returns:
@@ -102,22 +133,22 @@ def bf_weight_superdir(win_size, delay, ncov, fs=None):
     nch = len(delay)
     eta = 1e-6
 
-    ninv = np.zeros(ncov.shape, dtype=complex) 
+    ninv = np.zeros(cov.shape, dtype=complex) 
     for i in xrange(win_size):
-        ninv[i] = np.asmatrix(ncov[i] + np.eye(nch) * eta).I
+        ninv[i] = np.asmatrix(cov[i] + np.eye(nch) * eta).I
 
     return bf_weight_superdir_fast(win_size, delay, ninv, fs)
 
 
-def bf_superdir(tf, delay, ncov, fs=None):
-    """Apply MVDR beamformer to signals.
+def bf_superdir(tf, delay, cov, fs=None):
+    """Apply (static) MVDR beamformer to signals.
 
     Args:
         tf    : multi-channel time-frequency domain signal.
         delay : delay of each channel. If fs is given, value denotes
                 delay in second (continuous-time) ,
                 otherwise # of samples (discrete-time).
-        ncov  : noise covariance
+        cov   : covariance matrix, indexed by (ccf)
         fs    : sample rate. Default is None, @see delay.
 
     Returns:
@@ -126,7 +157,7 @@ def bf_superdir(tf, delay, ncov, fs=None):
     tf = np.asarray(tf)
     _, _, win_size = tf.shape
 
-    bf_wt = bf_weight_superdir(win_size, delay, ncov, fs)
+    bf_wt = bf_weight_superdir(win_size, delay, cov, fs)
 
     # apply transfer function and sum along channels
     return apply_beamforming(tf, bf_wt)
