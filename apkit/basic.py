@@ -246,7 +246,7 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
     Args:
         m_pos : microphone positions, (M,3) array,
                 M is number of microphones.
-        doa   : direction of arrival, (3,) array or (N,3) array,
+        doa   : normalized direction of arrival, (3,) array or (N,3) array,
                 N is the number of sources.
         c     : (default 340.29 m/s) speed of sound.
         fs    : (default None) sample rate.
@@ -286,6 +286,18 @@ def load_pts_on_sphere(name='p4000'):
     this_dir, this_filename = os.path.split(__file__)
     data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
     return np.load(data_path)
+
+def load_pts_horizontal(npts=360):
+    """Load points evenly distributed on the unit circle on x-y plane
+
+    Args:
+        npts : (default 360) number of points
+
+    Returns:
+        pts  : array of points on a unit circle
+    """
+    aindex = np.arange(npts) * 2 * np.pi / npts
+    return np.array([np.cos(aindex), np.sin(aindex), np.zeros(npts)]).T
 
 def neighbor_list(pts, dist, scale_z=1.0):
     """List of neighbors
