@@ -47,6 +47,24 @@ def load_wav(filename, offset=0, nsamples=-1):
     w.close()
     return fs, data.T
 
+def load_metadata(filename):
+    """Load metadata of a wav file instead of reading its content
+
+    Args:
+        filename : string or open file handle.
+
+    Returns:
+        fs        : sample rate.
+        nchannels : number of channels
+        nsamples  : number of samples
+    """
+    w = wave.open(filename, 'rb')
+    nchs = w.getnchannels()
+    fs = w.getframerate()
+    nsamples = w.getnframes()
+    w.close()
+    return fs, nchs, nsamples
+
 def save_wav(filename, fs, signal):
     """Save audio data as wav file.
 

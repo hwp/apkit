@@ -1,5 +1,6 @@
-from .basic import load_wav, save_wav, stft, istft, cola_hamming, \
-                   cola_rectangle, freq_upsample, power, power_tf, snr, \
+from .basic import load_wav, load_metadata, save_wav, \
+                   stft, istft, cola_hamming, cola_rectangle, \
+                   freq_upsample, power, power_tf, snr, \
                    steering_vector, compute_delay, load_pts_on_sphere, \
                    neighbor_list, angular_distance, azimuth_distance, \
                    mel, mel_inv, mel_freq_fbank_weight, \
