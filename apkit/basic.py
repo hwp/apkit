@@ -41,7 +41,7 @@ def load_wav(filename, offset=0, nsamples=-1):
         nsamples = w.getnframes()
     data = np.fromstring(w.readframes(nsamples), dtype=dtype)
     data = data.reshape((-1, nchs))
-    if not np.issubdtype(data.dtype, np.float):
+    if not np.issubdtype(data.dtype, np.floating):
         assert np.issubdtype(data.dtype, np.integer)
         data = data.astype(float) / abs(np.iinfo(data.dtype).min)
     w.close()
