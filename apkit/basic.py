@@ -73,7 +73,7 @@ def save_wav(filename, fs, signal):
         fs       : sample rate.
         signal   : multi-channel time-domain signal.
     """
-    if np.issubdtype(signal.dtype, float):
+    if np.issubdtype(signal.dtype, np.floating):
         signal[signal > 1.0] = 1.0
         signal[signal < -1.0] = -1.0
         dtype = np.dtype('int16')
