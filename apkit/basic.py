@@ -233,14 +233,14 @@ def snr(sandn, noise):
     return 10 * np.log10(psig / pnos)
 
 def steering_vector(delay, win_size=0, fbins=None, fs=None):
-    """Steering vector of delay.
+    """Compute the steering vector.
 
     One and only one of the conditions are true:
         - win_size != 0
         - fbins is not None
 
     Args:
-        delay : delay of each channel,
+        delay : delay of each channel (see compute_delay),
                 unit is second if fs is not None, otherwise sample
         win_size : (default 0) window (FFT) size. If zero, use fbins.
         fbins : (default None) center of frequency bins, as discrete value.
@@ -258,7 +258,7 @@ def steering_vector(delay, win_size=0, fbins=None, fs=None):
         fbins = np.fft.fftfreq(win_size)
     return np.exp(-2j * math.pi * np.outer(delay, fbins))
 
-def compute_delay(m_pos, doa, c=340.29, fs=None):
+def compute_delay(m_pos, doa, c=340, fs=None):
     """Compute delay of signal arrival at microphones.
 
     Args:
@@ -266,7 +266,7 @@ def compute_delay(m_pos, doa, c=340.29, fs=None):
                 M is number of microphones.
         doa   : normalized direction of arrival, (3,) array or (N,3) array,
                 N is the number of sources.
-        c     : (default 340.29 m/s) speed of sound.
+        c     : (default 340) speed of sound (m/s).
         fs    : (default None) sample rate.
 
     Return:
@@ -318,7 +318,7 @@ def load_pts_horizontal(npts=360):
     return np.array([np.cos(aindex), np.sin(aindex), np.zeros(npts)]).T
 
 def neighbor_list(pts, dist, scale_z=1.0):
-    """List of neighbors
+    """List of neighbors (using angular distance as metic)
 
     Args:
         pts     : array of points on a unit sphere
