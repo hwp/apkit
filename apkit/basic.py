@@ -198,7 +198,49 @@ def power(signal, vad_mask=None, vad_size=1):
                                  np.zeros(nsamples - len(vad_mask))
                                     .astype(np.bool))
         signal = signal[:,vad_mask]
-    return np.einsum('ct,ct->c', signal, signal) / float(len(signal.T))
+    return np.einsum('ct,ct->c', signal, signal) / float(nsamples)
+
+def power_avg(signal, vad_mask=None, vad_size=1):
+    """Average (accros channels) power
+
+    Args:
+        signal   : multi-channel time-domain signal
+        vad_mask : if given (default is None), the power on the voice
+                   detected frames is computed.
+        vad_size : vad frame size, default is 1.
+
+    Returns:
+        power    : average power of all channels.
+    """
+    return np.mean(power(signal, vad_mask, vad_size))
+
+def power_db(signal, vad_mask=None, vad_size=1):
+    """Power in dB
+
+    Args:
+        signal   : multi-channel time-domain signal
+        vad_mask : if given (default is None), the power on the voice
+                   detected frames is computed.
+        vad_size : vad frame size, default is 1.
+
+    Returns:
+        power_db : power of each channel in dB.
+    """
+    return 10.0 * np.log10(power(signal, vad_mask, vad_size))
+
+def power_avg_db(signal, vad_mask=None, vad_size=1):
+    """Average (accros channels) power in dB
+
+    Args:
+        signal   : multi-channel time-domain signal
+        vad_mask : if given (default is None), the power on the voice
+                   detected frames is computed.
+        vad_size : vad frame size, default is 1.
+
+    Returns:
+        power    : average power of all channels.
+    """
+    return 10.0 * np.log10(power_avg(signal, vad_mask, vad_size))
 
 def power_tf(tf):
     """Compute power of time-frequency domain signal
