@@ -35,6 +35,50 @@ def vec2ae(v):
     n = np.sqrt(x ** 2 + y ** 2)
     return np.asarray([np.arctan2(y, x), np.arctan2(z, n)]).T
 
+def vec2xsyma(v):
+    """Compute the angle between the vector and the x-axis
+
+    Args:
+        v : vector or list of vectors
+
+    Returns:
+        if one vector given:
+            angle (in radian)
+        else (list of vectors):
+            list of angles
+    """
+    v = np.asarray(v)
+    if v.ndim == 1:
+        x, y, z = v
+    else:
+        x = v[:,0]
+        y = v[:,1]
+        z = v[:,2]
+    n = np.sqrt(y ** 2 + z ** 2)
+    return np.arctan2(n, x)
+
+def vec2ysyma(v):
+    """Compute the angle between the vector and the y-axis - pi/2
+
+    Args:
+        v : vector or list of vectors
+
+    Returns:
+        if one vector given:
+            angle (in radian)
+        else (list of vectors):
+            list of angles
+    """
+    v = np.asarray(v)
+    if v.ndim == 1:
+        x, y, z = v
+    else:
+        x = v[:,0]
+        y = v[:,1]
+        z = v[:,2]
+    n = np.sqrt(x ** 2 + z ** 2)
+    return np.arctan2(y, n)
+
 def _u_sqr_minus_1(lam, m, tau):
     n, d = m.shape
     try:

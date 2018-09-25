@@ -9,7 +9,7 @@ from .basic import load_wav, load_metadata, save_wav, \
 from .cc import gcc_phat, cross_correlation, cc_across_time, \
                 pairwise_cc, pairwise_cpsd, cov_matrix, gcc_phat_fbanks
 from .tdoa import single_tdoa, tdoa_hist, tdoa_sum, pairwise_tdoa
-from .doa import vec2ae, doa_least_squares
+from .doa import vec2ae, vec2xsyma, vec2ysyma, doa_least_squares
 from .bf import apply_beamforming, bf_delay_sum, bf_weight_delay_sum, \
                 bf_weight_mvdr, \
                 bf_superdir, bf_weight_superdir, bf_weight_superdir_fast

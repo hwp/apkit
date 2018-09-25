@@ -135,8 +135,6 @@ def istft(tf, hop_size):
 
     Args:
         tf       : multi-channel time-frequency domain signal.
-        window   : window function, see cola_hamming as example.
-        win_size : window size
         hop_size : hop size
 
     Returns:
