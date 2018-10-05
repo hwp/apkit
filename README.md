@@ -1,7 +1,7 @@
 Audio Processing Kit (apkit)
 ============================
 
-This is python library for audio processing functions, including:
+This is a python library for audio processing. It includes the following functions:
 
 * Basic I/O
 * Basic Operations
@@ -100,4 +100,9 @@ The functions of this library are listed (not exhaustively) in the following tab
 | `local_maxima`        | Find local maxima in spatial spectrogram    |
 | `merge_lm_on_azimuth` | Merge local maxima with same azimuth        |
 | `vec2ae`              | Unit vector to azimuth-elevation conversion |
+
+Contact
+-------
+
+Weipeng He <heweipeng@gmail.com>
 
