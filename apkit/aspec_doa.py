@@ -11,65 +11,10 @@ import sys
 import math
 
 import numpy as np
-import scipy.ndimage
 import scipy.interpolate
 
-from .basic import steering_vector, compute_delay, azimuth_distance
-
-_apply_conv = scipy.ndimage.filters.convolve
-
-def empirical_cov_mat(tf, tw=2, fw=2):
-    """Empirical covariance matrix
-
-    Args:
-        tf  : multi-channel time-frequency domain signal, indices (ctf)
-        tw  : (default 2) half width of neighbor area in time domain,
-              including center
-        fw  : (default 2) half width of neighbor area in freq domain,
-              including center
-
-    Returns:
-        ecov: empirical covariance matrix, indices (cctf)
-    """
-    # covariance matrix without windowing
-    cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
-
-    # apply windowing by convolution
-    # compute convolution window
-    kernel = np.einsum('t,f->tf', np.hanning(tw * 2 + 1)[1:-1],
-                       np.hanning(fw * 2 + 1)[1:-1])
-    kernel = kernel / np.sum(kernel)    # normalize
-
-    # apply to each channel pair
-    ecov = np.zeros(cov.shape, dtype=cov.dtype)
-    for i in xrange(len(tf)):
-        for j in xrange(len(tf)):
-            rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest')
-            ipart = _apply_conv(cov[i,j,:,:].imag, kernel, mode='nearest')
-            ecov[i,j,:,:] = rpart + 1j * ipart
-    return ecov
-
-def empirical_cov_mat_by_block(tf, block_size, block_hop):
-    """Empirical covariance matrix by blocks
-
-    Args:
-        tf  : multi-channel time-frequency domain signal, indices (ctf)
-        block_size : number of frames in one block
-        block_hop  : number of frame shifts between blocks
-
-    Returns:
-        ecov: empirical covariance matrix, indices (cctf)
-    """
-    nch, nframe, nfbin = tf.shape
-
-    # covariance matrix
-    cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
-
-    # average in blocks
-    ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
-                for t in xrange(0, nframe - block_size + 1, block_hop)]
-    ecov = np.moveaxis(np.asarray(ecov), 0, 2)
-    return ecov
+from .basic import steering_vector, compute_delay
+from .doa import azimuth_distance
 
 def phi_mvdr_snr(ecov, delay, fbins=None):
     """Local angular spectrum function: MVDR (SNR)

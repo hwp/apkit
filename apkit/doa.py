@@ -7,10 +7,81 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
+import os
+import math
+
 import numpy as np
 import scipy
 
 _TOLERANCE = 1e-13
+
+def load_pts_on_sphere(name='p4000'):
+    """Load points on a unit sphere
+
+    Args:
+        name : should always be 'p4000'
+
+    Returns:
+        pts  : array of points on a unit sphere
+    """
+    this_dir, this_filename = os.path.split(__file__)
+    data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
+    return np.load(data_path)
+
+def load_pts_horizontal(npts=360):
+    """Load points evenly distributed on the unit circle on x-y plane
+
+    Args:
+        npts : (default 360) number of points
+
+    Returns:
+        pts  : array of points on a unit circle
+    """
+    aindex = np.arange(npts) * 2 * np.pi / npts
+    return np.array([np.cos(aindex), np.sin(aindex), np.zeros(npts)]).T
+
+def neighbor_list(pts, dist, scale_z=1.0):
+    """List of neighbors (using angular distance as metic)
+
+    Args:
+        pts     : array of points on a unit sphere
+        dist    : distance (rad) threshold
+        scale_z : (default 1.0) scale of z-axis,
+                  if scale_z is smaller than 1, more neighbors will be
+                  along elevation
+
+    Returns:
+        nlist   : list of list of neighbor indices
+    """
+    # pairwise inner product
+    if scale_z != 1.0:
+        pts = np.copy(pts)
+        pts[:,2] *= scale_z
+        pts /= np.linalg.norm(pts, axis=1, keepdims=True)
+    pip = np.einsum('ik,jk->ij', pts, pts)
+
+    # adjacency matrix
+    amat = pip >= math.cos(dist)
+    for i in xrange(len(pts)):
+        amat[i,i] = False
+
+    # convert to list
+    return [list(np.nonzero(n)[0]) for n in amat]
+
+_norm = np.linalg.norm
+
+def angular_distance(a, b):
+    denom = (_norm(a) * _norm(b))
+    if denom < 1e-16:
+        return math.pi
+    sim = np.dot(a, b) / denom
+    if sim > 1.0:
+        return 0.0
+    else:
+        return math.acos(sim)
+
+def azimuth_distance(a, b):
+    return angular_distance(a[:2], b[:2])
 
 def vec2ae(v):
     """Compute the azimuth and elevation of vectors

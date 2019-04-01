@@ -168,18 +168,6 @@ def pairwise_cpsd(tf):
     return {(x, y) : np.average(tf[x].conj() * tf[y], axis=0)
                 for x in range(nch) for y in range(nch) if x < y}
 
-def cov_matrix(tf):
-    """Covariance matrix of the  multi-channel signal.
-
-    Args:
-        tf  : multi-channel time-frequency domain signal.
-
-    Returns:
-        cov : covariance matrix, indexed by (ccf)
-    """
-    nch, nframe, nfbin = tf.shape
-    return np.einsum('itf,jtf->ijf', tf, tf.conj()) / float(nframe)
-
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
 

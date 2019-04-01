@@ -12,6 +12,7 @@ import math
 import wave
 
 import numpy as np
+import scipy.ndimage
 
 def load_wav(filename, offset=0, nsamples=-1):
     """Load wav file, convert to normalized float value
@@ -332,74 +333,6 @@ def compute_delay(m_pos, doa, c=340, fs=None):
     else:
         return diff
 
-def load_pts_on_sphere(name='p4000'):
-    """Load points on a unit sphere
-
-    Args:
-        name : should always be 'p4000'
-
-    Returns:
-        pts  : array of points on a unit sphere
-    """
-    this_dir, this_filename = os.path.split(__file__)
-    data_path = os.path.join(this_dir, 'data', '%s.npy' % name)
-    return np.load(data_path)
-
-def load_pts_horizontal(npts=360):
-    """Load points evenly distributed on the unit circle on x-y plane
-
-    Args:
-        npts : (default 360) number of points
-
-    Returns:
-        pts  : array of points on a unit circle
-    """
-    aindex = np.arange(npts) * 2 * np.pi / npts
-    return np.array([np.cos(aindex), np.sin(aindex), np.zeros(npts)]).T
-
-def neighbor_list(pts, dist, scale_z=1.0):
-    """List of neighbors (using angular distance as metic)
-
-    Args:
-        pts     : array of points on a unit sphere
-        dist    : distance (rad) threshold
-        scale_z : (default 1.0) scale of z-axis,
-                  if scale_z is smaller than 1, more neighbors will be
-                  along elevation
-
-    Returns:
-        nlist   : list of list of neighbor indices
-    """
-    # pairwise inner product
-    if scale_z != 1.0:
-        pts = np.copy(pts)
-        pts[:,2] *= scale_z
-        pts /= np.linalg.norm(pts, axis=1, keepdims=True)
-    pip = np.einsum('ik,jk->ij', pts, pts)
-
-    # adjacency matrix
-    amat = pip >= math.cos(dist)
-    for i in xrange(len(pts)):
-        amat[i,i] = False
-
-    # convert to list
-    return [list(np.nonzero(n)[0]) for n in amat]
-
-_norm = np.linalg.norm
-
-def angular_distance(a, b):
-    denom = (_norm(a) * _norm(b))
-    if denom < 1e-16:
-        return math.pi
-    sim = np.dot(a, b) / denom
-    if sim > 1.0:
-        return 0.0
-    else:
-        return math.acos(sim)
-
-def azimuth_distance(a, b):
-    return angular_distance(a[:2], b[:2])
-
 def mel(f):
     """Mel function
 
@@ -490,6 +423,73 @@ def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
                                           min(nframes,i+neighbor_size+1)],
                                    axis=1)
     return (apower > 10.0 ** (threshold_db / 10.0)).astype(int)
+
+def cov_matrix(tf):
+    """Covariance matrix of the  multi-channel signal.
+
+    Args:
+        tf  : multi-channel time-frequency domain signal.
+
+    Returns:
+        cov : covariance matrix, indexed by (ccf)
+    """
+    nch, nframe, nfbin = tf.shape
+    return np.einsum('itf,jtf->ijf', tf, tf.conj()) / float(nframe)
+
+def empirical_cov_mat(tf, tw=2, fw=2):
+    """Empirical covariance matrix
+
+    Args:
+        tf  : multi-channel time-frequency domain signal, indices (ctf)
+        tw  : (default 2) half width of neighbor area in time domain,
+              including center
+        fw  : (default 2) half width of neighbor area in freq domain,
+              including center
+
+    Returns:
+        ecov: empirical covariance matrix, indices (cctf)
+    """
+    _apply_conv = scipy.ndimage.filters.convolve
+
+    # covariance matrix without windowing
+    cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
+
+    # apply windowing by convolution
+    # compute convolution window
+    kernel = np.einsum('t,f->tf', np.hanning(tw * 2 + 1)[1:-1],
+                       np.hanning(fw * 2 + 1)[1:-1])
+    kernel = kernel / np.sum(kernel)    # normalize
+
+    # apply to each channel pair
+    ecov = np.zeros(cov.shape, dtype=cov.dtype)
+    for i in xrange(len(tf)):
+        for j in xrange(len(tf)):
+            rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest')
+            ipart = _apply_conv(cov[i,j,:,:].imag, kernel, mode='nearest')
+            ecov[i,j,:,:] = rpart + 1j * ipart
+    return ecov
+
+def empirical_cov_mat_by_block(tf, block_size, block_hop):
+    """Empirical covariance matrix by blocks
+
+    Args:
+        tf  : multi-channel time-frequency domain signal, indices (ctf)
+        block_size : number of frames in one block
+        block_hop  : number of frame shifts between blocks
+
+    Returns:
+        ecov: empirical covariance matrix, indices (cctf)
+    """
+    nch, nframe, nfbin = tf.shape
+
+    # covariance matrix
+    cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
+
+    # average in blocks
+    ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
+                for t in xrange(0, nframe - block_size + 1, block_hop)]
+    ecov = np.moveaxis(np.asarray(ecov), 0, 2)
+    return ecov
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
