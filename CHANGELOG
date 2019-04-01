@@ -1,0 +1,4 @@
+version 0.2
+  * Covariance matrix (cov_matrix) format is corrected from (fcc) to (ccf).
+  * Beamformers codes are refactored into classes that can load background and preload signal.
+
