@@ -10,6 +10,9 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import abc
 
 import numpy as np
+import scipy.linalg
+
+from .basic import empirical_cov_mat
 
 def apply_beamforming(tf, bf_wt):
     """Apply beamforming to the signal with given beamforming weights
@@ -85,6 +88,42 @@ class StaticMVDR(AbstractBeamformer):
 
         # apply transfer function and sum along channels
         return np.expand_dims(apply_beamforming(tf, bf_wt), axis=0)
+
+class MVDR(AbstractBeamformer):
+    """(adaptive) MVDR beamformer
+
+    covariance matrix are computed for each time-frequency neighborhood
+    """
+    def __init__(self, eta=1e-6):
+        """
+        Args:
+            eta : a constant added to the diagonal of the covariance matrix,
+                  it is the so-called white noise constraint
+        """
+        self.eta = eta
+
+    def preload_tf(self, tf):
+        nch, _, _ = tf.shape
+        wnc = (np.eye(nch) * self.eta).reshape(nch, nch, 1, 1)
+                                            # white noise constraint
+        self.ecov = empirical_cov_mat(tf, tw=2, fw=2) + wnc
+
+    def __call__(self, tf, stv):
+        nch, nframe, nfbin = tf.shape
+        res = np.zeros((1, nframe, nfbin), dtype=tf.dtype)
+
+        for i in xrange(nframe):
+            numerator = np.zeros(stv.shape, stv.dtype)
+            for j in xrange(nfbin):
+                numerator[:,j] = scipy.linalg.solve(self.ecov[:,:,i,j], stv[:,j],
+                                                    assume_a='pos')
+            denominator = np.einsum('cf,cf->f', stv.conj(), numerator)
+            bf_wt = np.einsum('cf,f->cf', numerator, 1.0 / denominator)
+
+            # apply for each frame
+            res[0,i] = apply_beamforming(tf[:,[i]], bf_wt)
+        return res
+
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
