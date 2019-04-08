@@ -7,7 +7,6 @@ Copyright (c) 2017 Idiap Research Institute, http://www.idiap.ch/
 Written by Weipeng He <weipeng.he@idiap.ch>
 """
 
-import os
 import math
 import wave
 
@@ -305,7 +304,7 @@ def compute_delay(m_pos, doa, c=340, fs=None):
     Args:
         m_pos : microphone positions, (M,3) array,
                 M is number of microphones.
-        doa   : normalized direction of arrival, (3,) array or (N,3) array,
+        doa   : direction of arrival, (3,) array or (N,3) array,
                 N is the number of sources.
         c     : (default 340) speed of sound (m/s).
         fs    : (default None) sample rate.
@@ -323,9 +322,11 @@ def compute_delay(m_pos, doa, c=340, fs=None):
 
     # inner product -> different in time
     if doa.ndim == 1:
+        doa /= np.sqrt(np.sum(doa ** 2.0))                          # normalize
         diff = -np.einsum('ij,j->i', r_pos, doa) / c
     else:
         assert doa.ndim == 2
+        doa /= np.sqrt(np.sum(doa ** 2.0, axis=1, keepdims=True))   # normalize
         diff = -np.einsum('ij,kj->ki', r_pos, doa) / c
 
     if fs is not None:
