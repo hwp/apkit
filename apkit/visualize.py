@@ -41,7 +41,7 @@ def spectrogram(fs, tf, hop_size):
                        aspect='auto', origin='lower')
         l = len(c) * hop_size / fs
         plt.xticks(np.arange(l + 1) * fs / hop_size,
-                   [str(1.0 * t) for t in xrange(l + 1)])
+                   [str(1.0 * t) for t in range(l + 1)])
         n = 4
         plt.yticks(np.arange(n + 1) * ny / n,
                    [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
@@ -62,7 +62,7 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
     fig = plt.figure()
 
     keys = sorted(pw_cc.keys())
-    vmax = np.max([np.max(np.abs(cc)) for cc in pw_cc.itervalues()])
+    vmax = np.max([np.max(np.abs(cc)) for cc in pw_cc.values()])
     for i, k in enumerate(keys):
         cc = pw_cc[k]
         sp = fig.add_subplot(len(pw_cc), 1, i+1)
@@ -90,7 +90,7 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
             l = l / 10
             m = m * 10
         plt.xticks(np.arange(l + 1) * m * fs / hop_size,
-                   [str(1.0 * m * t) for t in xrange(l + 1)])
+                   [str(1.0 * m * t) for t in range(l + 1)])
 
         n = 2
         ypos = ny + np.arange(-n,n+1) * ny / n

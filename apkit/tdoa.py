@@ -79,7 +79,7 @@ def pairwise_tdoa(pw_cc, tdoa_func, fs=None):
         pw_tdoa   : TDOA between all channel pairs.
                     dict : (channel id, channel id) -> tdoa estimate.
     """
-    return {k : tdoa_func(cc, fs) for k, cc in pw_cc.items()}
+    return {k: tdoa_func(cc, fs) for k, cc in pw_cc.iteritems()}
 
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4

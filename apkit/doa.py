@@ -62,7 +62,7 @@ def neighbor_list(pts, dist, scale_z=1.0):
 
     # adjacency matrix
     amat = pip >= math.cos(dist)
-    for i in xrange(len(pts)):
+    for i in range(len(pts)):
         amat[i,i] = False
 
     # convert to list
@@ -155,7 +155,7 @@ def _u_sqr_minus_1(lam, m, tau):
     try:
         u = np.linalg.solve(m.T * m - lam * np.eye(d), m.T * tau)
     except np.linalg.LinAlgError as e:
-        print e
+        print(e)
         # TODO handle singular case
         return -1
     return np.asscalar(u.T * u - 1)
@@ -191,7 +191,7 @@ def doa_least_squares(pw_tdoa, m_pos, c=340.29):
     Returns:
         list of optimal solutions of u
     """
-    pairs = pw_tdoa.keys()
+    pairs = list(pw_tdoa.keys())
     tau = np.matrix([pw_tdoa[p] * c for p in pairs]).T
     m = np.matrix([m_pos[i] - m_pos[j] for i, j in pairs])
 

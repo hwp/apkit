@@ -72,8 +72,8 @@ def gcc_phat_fbanks(ecov, fbw, zoom, freq=None, eps=0.0):
     # normalize weight
     fbwn = fbw / np.sum(fbw, axis=1, keepdims=True)
     fbcc = {}
-    for i in xrange(nch - 1):
-        for j in xrange(i + 1, nch):
+    for i in range(nch - 1):
+        for j in range(i + 1, nch):
             # phase transform on CPSD
             cpsd = ecov[i, j]
             if eps <= 0.0:
@@ -88,8 +88,8 @@ def gcc_phat_fbanks(ecov, fbw, zoom, freq=None, eps=0.0):
                            optimize='optimal').real
             '''
             cc = np.zeros((len(fbw), nframe, len(delay)))
-            for b in xrange(len(fbw)):
-                for f in xrange(nfbin):
+            for b in range(len(fbw)):
+                for f in range(nfbin):
                     if fbwn[b,f] > 0:
                         cc[b,:,:] += fbwn[b,f] * \
                                         np.outer(cpsd_phat[:,f], steer[f,:]).real

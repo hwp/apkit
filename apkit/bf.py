@@ -23,9 +23,7 @@ def apply_beamforming(tf, bf_wt):
     """
     return np.einsum('ctf,cf->tf', tf, bf_wt.conj())
 
-class AbstractBeamformer(object):
-    __metaclass__  = abc.ABCMeta
-
+class AbstractBeamformer(object, metaclass=abc.ABCMeta):
     def load_bg_cov(self, cov):
         """Load background signal covariance matrix
 
@@ -75,7 +73,7 @@ class StaticMVDR(AbstractBeamformer):
         eta = 1e-6
 
         self.binv = np.zeros(cov.shape, dtype=complex)
-        for i in xrange(nfbins):
+        for i in range(nfbins):
             self.binv[:,:,i] = np.asmatrix(cov[:,:,i] + np.eye(nch) * eta).I
 
     def __call__(self, tf, stv):

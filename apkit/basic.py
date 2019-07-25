@@ -129,7 +129,7 @@ def stft(signal, window, win_size, hop_size, last_sample=False):
     assert signal.ndim == 2
     w = window(win_size, hop_size)
     return np.array([[np.fft.fft(c[t:t+win_size] * w)
-        for t in xrange(0, len(c) - win_size + (1 if last_sample else 0), hop_size)] for c in signal])
+        for t in range(0, len(c) - win_size + (1 if last_sample else 0), hop_size)] for c in signal])
 
 def istft(tf, hop_size):
     """Inverse STFT
@@ -144,7 +144,7 @@ def istft(tf, hop_size):
     tf = np.asarray(tf)
     nch, nframe, nfbin = tf.shape
     signal = np.zeros((nch, (nframe - 1) * hop_size + nfbin))
-    for t in xrange(nframe):
+    for t in range(nframe):
         signal[:, t*hop_size:t*hop_size+nfbin] += \
                 np.real(np.fft.ifft(tf[:, t]))
     return signal
@@ -378,7 +378,7 @@ def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
     freq = np.abs(fs * freq)
 
     # per bank
-    for i in xrange(n):
+    for i in range(n):
         # left slope
         left = (freq - fls[i]) / (fls[i+1] - fls[i])
         left[left < 0.0] = 0.0
@@ -410,7 +410,7 @@ def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
     nch, nsamples = sig.shape
     nframes = nsamples * vadrate / fs
     fpower = np.zeros((nch, nframes)) # power at frame level
-    for i in xrange(nframes):
+    for i in range(nframes):
         fpower[:, i] = power(sig[:, (i*fs/vadrate):((i+1)*fs/vadrate)])
 
     # average power in neighbor area
@@ -418,7 +418,7 @@ def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
         apower = fpower
     else:
         apower = np.zeros((nch, nframes))
-        for i in xrange(nframes):
+        for i in range(nframes):
             apower[:, i] = np.mean(fpower[:, max(0,i-neighbor_size):
                                           min(nframes,i+neighbor_size+1)],
                                    axis=1)
@@ -462,8 +462,8 @@ def empirical_cov_mat(tf, tw=2, fw=2):
 
     # apply to each channel pair
     ecov = np.zeros(cov.shape, dtype=cov.dtype)
-    for i in xrange(len(tf)):
-        for j in xrange(len(tf)):
+    for i in range(len(tf)):
+        for j in range(len(tf)):
             rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest')
             ipart = _apply_conv(cov[i,j,:,:].imag, kernel, mode='nearest')
             ecov[i,j,:,:] = rpart + 1j * ipart
@@ -487,7 +487,7 @@ def empirical_cov_mat_by_block(tf, block_size, block_hop):
 
     # average in blocks
     ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
-                for t in xrange(0, nframe - block_size + 1, block_hop)]
+                for t in range(0, nframe - block_size + 1, block_hop)]
     ecov = np.moveaxis(np.asarray(ecov), 0, 2)
     return ecov
 

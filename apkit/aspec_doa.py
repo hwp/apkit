@@ -34,15 +34,15 @@ def phi_mvdr_snr(ecov, delay, fbins=None):
     eta = 1e-10
     nch, _, nframe, nfbin = ecov.shape
     iecov = np.zeros(ecov.shape, dtype=ecov.dtype)
-    for i in xrange(nframe):
-        for j in xrange(nfbin):
+    for i in range(nframe):
+        for j in range(nfbin):
             iecov[:,:,i,j] = np.asmatrix(ecov[:,:,i,j] + np.eye(nch) * eta).I
 
     # total power: trace mean
     tpow = np.einsum('cctf->tf', ecov).real / nch + eta
 
     phi = np.zeros((len(delay), nframe))
-    for i in xrange(len(delay)):
+    for i in range(len(delay)):
         if fbins is None:
             stv = steering_vector(delay[i], nfbin)
         else:
@@ -72,12 +72,12 @@ def phi_mvdr(ecov, delay, fbins=None):
     eta = 1e-10
     nch, _, nframe, nfbin = ecov.shape
     iecov = np.zeros(ecov.shape, dtype=ecov.dtype)
-    for i in xrange(nframe):
-        for j in xrange(nfbin):
+    for i in range(nframe):
+        for j in range(nfbin):
             iecov[:,:,i,j] = np.asmatrix(ecov[:,:,i,j] + np.eye(nch) * eta).I
 
     phi = np.zeros((len(delay), nframe))
-    for i in xrange(len(delay)):
+    for i in range(len(delay)):
         if fbins is None:
             stv = steering_vector(delay[i], nfbin)
         else:
@@ -105,7 +105,7 @@ def phi_srp_phat(ecov, delay, fbins=None):
     # compute inverse of empirical covariance matrix
     nch, _, nframe, nfbin = ecov.shape
 
-    mask = np.asarray([[c < d for d in xrange(nch)] for c in xrange(nch)])
+    mask = np.asarray([[c < d for d in range(nch)] for c in range(nch)])
     ecov_upper_tri = ecov[mask]
     cpsd_phat = np.zeros(ecov_upper_tri.shape, dtype=ecov_upper_tri.dtype)
     ampl = np.abs(ecov_upper_tri)
@@ -113,14 +113,14 @@ def phi_srp_phat(ecov, delay, fbins=None):
     cpsd_phat[non_zero_mask] = ecov_upper_tri[non_zero_mask] / ampl[non_zero_mask]
 
     phi = np.zeros((len(delay), nframe))
-    for i in xrange(len(delay)):
+    for i in range(len(delay)):
         if fbins is None:
             stv = steering_vector(delay[i], nfbin)
         else:
             stv = steering_vector(delay[i], fbins=fbins)
 
-        x = np.asarray([stv[c] * stv[d].conj() for c in xrange(nch)
-                                               for d in xrange (nch)
+        x = np.asarray([stv[c] * stv[d].conj() for c in range(nch)
+                                               for d in range (nch)
                                                if c < d])
         phi[i] = np.einsum('itf,if->t', cpsd_phat, x.conj(),
                            optimize='optimal').real / nfbin / len(x)
@@ -143,7 +143,7 @@ def phi_srp_phat_nonlin(ecov, delay, fbins=None):
     # compute inverse of empirical covariance matrix
     nch, _, nframe, nfbin = ecov.shape
 
-    mask = np.asarray([[c < d for d in xrange(nch)] for c in xrange(nch)])
+    mask = np.asarray([[c < d for d in range(nch)] for c in range(nch)])
     ecov_upper_tri = ecov[mask]
     cpsd_phat = np.zeros(ecov_upper_tri.shape, dtype=ecov_upper_tri.dtype)
     ampl = np.abs(ecov_upper_tri)
@@ -151,14 +151,14 @@ def phi_srp_phat_nonlin(ecov, delay, fbins=None):
     cpsd_phat[non_zero_mask] = ecov_upper_tri[non_zero_mask] / ampl[non_zero_mask]
 
     phi = np.zeros((len(delay), nframe))
-    for i in xrange(len(delay)):
+    for i in range(len(delay)):
         if fbins is None:
             stv = steering_vector(delay[i], nfbin)
         else:
             stv = steering_vector(delay[i], fbins=fbins)
 
-        x = np.asarray([stv[c] * stv[d].conj() for c in xrange(nch)
-                                               for d in xrange (nch)
+        x = np.asarray([stv[c] * stv[d].conj() for c in range(nch)
+                                               for d in range (nch)
                                                if c < d])
         phi_if = np.einsum('itf,if->itf', cpsd_phat, x.conj(),
                            optimize='optimal').real
@@ -193,7 +193,7 @@ class MVDR_NCOV:
         """
         nch, _, nframe, nfbin = ecov.shape
         phi = np.zeros((len(delay), nframe))
-        for i in xrange(len(delay)):
+        for i in range(len(delay)):
             if fbins is None:
                 stv = steering_vector(delay[i], nfbin)
             else:
@@ -237,7 +237,7 @@ class MVDR_NCOV_SNR:
         # total power
         pt = np.einsum('cctf->tf', ecov).real
 
-        for i in xrange(len(delay)):
+        for i in range(len(delay)):
             if fbins is None:
                 stv = steering_vector(delay[i], nfbin)
             else:
@@ -283,7 +283,7 @@ class MVDR_NCOV_SIG:
         """
         nch, _, nframe, nfbin = ecov.shape
         phi = np.zeros((len(delay), nframe))
-        for i in xrange(len(delay)):
+        for i in range(len(delay)):
             if fbins is None:
                 stv = steering_vector(delay[i], nfbin)
             else:
@@ -320,11 +320,11 @@ def sevd_music(ecov, delay, fbins=None):
     """
     nch, _, nframe, nfbin = ecov.shape
     phi = np.zeros((len(delay), nframe))
-    for t in xrange(nframe):
+    for t in range(nframe):
         w, v = np.linalg.eigh(np.moveaxis(ecov[:,:,t], 2, 0))
         v = v[:,:,:-1]   # assume one source
 
-        for i in xrange(len(delay)):
+        for i in range(len(delay)):
             if fbins is None:
                 stv = steering_vector(delay[i], nfbin)
             else:
@@ -361,14 +361,14 @@ class MUSIC:
         """
         nch, _, nframe, nfbin = ecov.shape
         phi = np.zeros((len(delay), nframe))
-        for t in xrange(nframe):
+        for t in range(nframe):
             neigs=np.zeros((nfbin, nch, nch-1), dtype=ecov.dtype)
-            for f in xrange(nfbin):
+            for f in range(nfbin):
                 w, v = scipy.linalg.eigh(ecov[:,:,t,f], self.ncov[:,:,f],
                                          eigvals=(0, nch-2))
                 neigs[f] = v / np.linalg.norm(v, axis=0, keepdims=True)
 
-            for i in xrange(len(delay)):
+            for i in range(len(delay)):
                 if fbins is None:
                     stv = steering_vector(delay[i], nfbin)
                 else:
@@ -406,11 +406,11 @@ class GSVD_MUSIC:
         """
         nch, _, nframe, nfbin = ecov.shape
         phi = np.zeros((len(delay), nframe))
-        for t in xrange(nframe):
+        for t in range(nframe):
             u, s, v = np.linalg.svd(np.einsum('cdf,def->fce', self.incov, ecov[:,:,t,:]))
             u = u[:,:,1:]   # assume one source
 
-            for i in xrange(len(delay)):
+            for i in range(len(delay)):
                 if fbins is None:
                     stv = steering_vector(delay[i], nfbin)
                 else:
@@ -472,14 +472,14 @@ def merge_lm_on_azimuth(phi, lmax, doa, th_azi):
     ndoa, nframe = phi.shape
     nlmax = []
 
-    for t in xrange(nframe):
+    for t in range(nframe):
         # remove elevation > 70 degrees
         l = np.asarray([x for x in lmax[t]
                           if abs(doa[x][2]) < math.sin(math.pi / 180 * 70)])
         n = len(l)
         m = np.ones(n, dtype=bool)
-        for i in xrange(n - 1):
-            for j in xrange(i + 1, n):
+        for i in range(n - 1):
+            for j in range(i + 1, n):
                 # TODO
                 ad = azimuth_distance(doa[l[i]], doa[l[j]])
                 if ad < th_azi:
@@ -521,8 +521,8 @@ def convert_to_azimuth(phi, doa, agrid, egrid, m_pos):
     gdelay = [compute_delay(m_pos, d) for d in gdoa]
 
     # iterate through frames
-    for t in xrange(nframe):
-        print >> sys.stderr, 'frame %d' % t
+    for t in range(nframe):
+        print('frame %d' % t, file=sys.stderr)
         # create interpolated function
         phi_intp = scipy.interpolate.Rbf(delay[:,1], delay[:,2],
                                          delay[:,3], phi[:,t],
