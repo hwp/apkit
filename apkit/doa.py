@@ -71,6 +71,10 @@ def neighbor_list(pts, dist, scale_z=1.0):
 _norm = np.linalg.norm
 
 def angular_distance(a, b):
+    a = np.asarray(a)
+    b = np.asarray(b)
+    assert a.shape == (3,)
+    assert b.shape == (3,)
     denom = (_norm(a) * _norm(b))
     if denom < 1e-16:
         return math.pi
