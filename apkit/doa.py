@@ -73,8 +73,8 @@ _norm = np.linalg.norm
 def angular_distance(a, b):
     a = np.asarray(a)
     b = np.asarray(b)
-    assert a.shape == (3,)
-    assert b.shape == (3,)
+    assert a.ndim == 1
+    assert a.shape == b.shape
     denom = (_norm(a) * _norm(b))
     if denom < 1e-16:
         return math.pi
