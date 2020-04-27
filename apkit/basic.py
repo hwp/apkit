@@ -356,7 +356,7 @@ def mel_inv(m):
     """
     return 700.0 * (np.exp(m / 1125.0) - 1.0)
 
-def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
+def mel_freq_fbank_weight(n, freq, fs, fmax=None, fmin=0.0):
     """Mel-freqency filter banks weights
 
     Args:
@@ -371,6 +371,8 @@ def mel_freq_fbank_weight(n, freq, fs, fmax, fmin=0.0):
         fbw  : filter bank weights, indexed by 'bf'.
                'b' is the index of filter bank.
     """
+    if fmax is None:
+        fmax = fs // 2
     mmax = mel(fmax)
     mmin = mel(fmin)
     mls = np.linspace(mmin, mmax, n + 2)
