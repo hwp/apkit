@@ -77,6 +77,8 @@ def angular_distance(a, b):
     sim = np.dot(a, b) / denom
     if sim > 1.0:
         return 0.0
+    elif sim < -1.0:
+        return math.pi
     else:
         return math.acos(sim)
 
