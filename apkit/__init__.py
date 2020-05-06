@@ -17,3 +17,4 @@ from .aspec_doa import local_maxima, merge_lm_on_azimuth, convert_to_azimuth, \
                        phi_mvdr, phi_srp_phat, phi_srp_phat_nonlin, \
                        phi_mvdr_snr, MUSIC, GSVD_MUSIC, MVDR_NCOV, \
                        MVDR_NCOV_SNR, MVDR_NCOV_SIG, sevd_music
+from .mfcc import mfcc
