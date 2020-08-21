@@ -1,6 +1,7 @@
 current version
   * compute_delay : DOA can be not normalized
   * add MVDR beamformer
+  * move to python3
 
 version 0.2
   * Covariance matrix (cov_matrix) format is corrected from (fcc) to (ccf).

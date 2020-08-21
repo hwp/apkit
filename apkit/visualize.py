@@ -8,6 +8,7 @@ Written by Weipeng He <weipeng.he@idiap.ch>
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def plot_wave(fs, signal):
     """Plot wave of singals.
 
@@ -18,8 +19,9 @@ def plot_wave(fs, signal):
     fig = plt.figure()
 
     for i, c in enumerate(signal):
-        sp = fig.add_subplot(len(signal), 1, i+1)
+        sp = fig.add_subplot(len(signal), 1, i + 1)
         sp.plot(np.arange(len(c), dtype=float) / fs, c)
+
 
 def spectrogram(fs, tf, hop_size):
     """Plot spectrograms of singals
@@ -33,19 +35,26 @@ def spectrogram(fs, tf, hop_size):
 
     vmax = np.percentile(np.abs(tf), 99)
     for i, c in enumerate(tf):
-        sp = fig.add_subplot(len(tf), 1, i+1)
+        sp = fig.add_subplot(len(tf), 1, i + 1)
         _, nfft = c.shape
-        ny = nfft / 2 + 1
-        im = sp.imshow(np.abs(c[:,:ny]).T, vmin=0, vmax=vmax,
-                       cmap=plt.get_cmap('magma'), interpolation='none',
-                       aspect='auto', origin='lower')
-        l = len(c) * hop_size / fs
-        plt.xticks(np.arange(l + 1) * fs / hop_size,
-                   [str(1.0 * t) for t in range(l + 1)])
+        ny = nfft // 2 + 1
+        im = sp.imshow(np.abs(c[:, :ny]).T,
+                       vmin=0,
+                       vmax=vmax,
+                       cmap=plt.get_cmap('magma'),
+                       interpolation='none',
+                       aspect='auto',
+                       origin='lower')
+        l = len(c) * hop_size // fs
+        plt.xticks(
+            np.arange(l + 1) * fs / hop_size,
+            [str(1.0 * t) for t in range(l + 1)])
         n = 4
-        plt.yticks(np.arange(n + 1) * ny / n,
-                   [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
+        plt.yticks(
+            np.arange(n + 1) * ny / n,
+            [str(fs / 2.0 * f / n) for f in np.arange(n + 1)])
         fig.colorbar(im)
+
 
 def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
     """Plot pairwise cross correlation across time.
@@ -65,38 +74,43 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
     vmax = np.max([np.max(np.abs(cc)) for cc in pw_cc.values()])
     for i, k in enumerate(keys):
         cc = pw_cc[k]
-        sp = fig.add_subplot(len(pw_cc), 1, i+1)
+        sp = fig.add_subplot(len(pw_cc), 1, i + 1)
         _, nfft = cc.shape
         ny = nfft / 2 + 1
         assert zoom < ny
 
         if zoom is None:
-            cc = np.concatenate((cc[:,ny:], cc[:,:ny]), axis=1)
+            cc = np.concatenate((cc[:, ny:], cc[:, :ny]), axis=1)
         else:
-            cc = np.concatenate((cc[:,-zoom:],
-                                 cc[:,:zoom+1]), axis=1)
+            cc = np.concatenate((cc[:, -zoom:], cc[:, :zoom + 1]), axis=1)
             ny = zoom
-        im = sp.imshow(cc.T, vmin=-vmax, vmax=vmax, cmap=plt.cm.bwr,
-                       interpolation='none', aspect='auto',
+        im = sp.imshow(cc.T,
+                       vmin=-vmax,
+                       vmax=vmax,
+                       cmap=plt.cm.bwr,
+                       interpolation='none',
+                       aspect='auto',
                        origin='lower')
         if ch_names is None:
             plt.title('Channel %d vs. %d' % k)
         else:
             plt.title('%s vs. %s' % tuple(ch_names[c] for c in k))
 
-        l = len(cc) * hop_size / fs
+        l = len(cc) * hop_size // fs
         m = 1
         while l > 10:
-            l = l / 10
+            l = l // 10
             m = m * 10
-        plt.xticks(np.arange(l + 1) * m * fs / hop_size,
-                   [str(1.0 * m * t) for t in range(l + 1)])
+        plt.xticks(
+            np.arange(l + 1) * m * fs / hop_size,
+            [str(1.0 * m * t) for t in range(l + 1)])
 
         n = 2
-        ypos = ny + np.arange(-n,n+1) * ny / n
+        ypos = ny + np.arange(-n, n + 1) * ny / n
         plt.yticks(ypos,
                    ['%.2g' % y for y in (ypos - ny) * 1.0 / (upsample * fs)])
         fig.colorbar(im)
+
 
 def plot_power(fs, tf, hop_size):
     """Plot power of singals (frame by frame)
@@ -109,15 +123,16 @@ def plot_power(fs, tf, hop_size):
     fig = plt.figure()
 
     for i, c in enumerate(tf):
-        sp = fig.add_subplot(len(tf), 1, i+1)
+        sp = fig.add_subplot(len(tf), 1, i + 1)
         lt, lf = c.shape
         t = np.arange(lt, dtype=float) / fs * hop_size
-        power = np.sum(np.abs(c) ** 2, axis=1) / (lf * lf)
+        power = np.sum(np.abs(c)**2, axis=1) / (lf * lf)
         sp.semilogy(t, power)
+
 
 def show():
     plt.show()
 
+
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
-

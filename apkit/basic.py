@@ -13,6 +13,7 @@ import wave
 import numpy as np
 import scipy.ndimage
 
+
 def load_wav(filename, offset=0, nsamples=-1):
     """Load wav file, convert to normalized float value
 
@@ -47,6 +48,7 @@ def load_wav(filename, offset=0, nsamples=-1):
     w.close()
     return fs, data.T
 
+
 def load_metadata(filename):
     """Load metadata of a wav file instead of reading its content
 
@@ -64,6 +66,7 @@ def load_metadata(filename):
     nsamples = w.getnframes()
     w.close()
     return fs, nchs, nsamples
+
 
 def save_wav(filename, fs, signal):
     """Save audio data as wav file.
@@ -86,6 +89,7 @@ def save_wav(filename, fs, signal):
     w.writeframes(signal.T.tobytes())
     w.close()
 
+
 def cola_hamming(win_size, hop_size):
     """ Hamming window, periodic and constant-overlap-add (COLA, sum=1)
 
@@ -99,6 +103,7 @@ def cola_hamming(win_size, hop_size):
     return np.hamming(win_size + 1)[0:win_size] \
                 / 1.08 * hop_size / win_size * 2
 
+
 def cola_rectangle(win_size, hop_size):
     """ Recangle window, periodic and constant-overlap-add (COLA, sum=1)
 
@@ -110,6 +115,7 @@ def cola_rectangle(win_size, hop_size):
         w        : window coefficients
     """
     return np.ones(win_size) * hop_size / win_size
+
 
 def stft(signal, window, win_size, hop_size, last_sample=False):
     """Convert time-domain signal to time-frequency domain.
@@ -127,8 +133,12 @@ def stft(signal, window, win_size, hop_size, last_sample=False):
     """
     assert signal.ndim == 2
     w = window(win_size, hop_size)
-    return np.array([[np.fft.fft(c[t:t+win_size] * w)
-        for t in range(0, len(c) - win_size + (1 if last_sample else 0), hop_size)] for c in signal])
+    return np.array([[
+        np.fft.fft(c[t:t + win_size] * w)
+        for t in range(0,
+                       len(c) - win_size + (1 if last_sample else 0), hop_size)
+    ] for c in signal])
+
 
 def istft(tf, hop_size):
     """Inverse STFT
@@ -148,6 +158,7 @@ def istft(tf, hop_size):
                 np.real(np.fft.ifft(tf[:, t]))
     return signal
 
+
 def freq_upsample(s, upsample):
     """ padding in frequency domain, should be used with ifft so that
     signal is upsampled in time-domain.
@@ -164,15 +175,15 @@ def freq_upsample(s, upsample):
     assert isinstance(upsample, int) and upsample > 1
     l = len(s)
     if l % 2 == 0:
-        h = l / 2
+        h = l // 2
         return upsample * np.concatenate(
-                (s[:h], np.array([s[h] / 2.0]),
-                 np.zeros(l * (upsample - 1) - 1),
-                 np.array([s[h] / 2.0]), s[h+1:]))
+            (s[:h], np.array([s[h] / 2.0]), np.zeros(l * (upsample - 1) - 1),
+             np.array([s[h] / 2.0]), s[h + 1:]))
     else:
-        h = l / 2 + 1
+        h = l // 2 + 1
         return upsample * np.concatenate(
-                (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
+            (s[:h], np.zeros(l * (upsample - 1)), s[h:]))
+
 
 def power(signal, vad_mask=None, vad_size=1):
     """Signal power
@@ -192,11 +203,12 @@ def power(signal, vad_mask=None, vad_size=1):
         if len(vad_mask) >= nsamples:
             vad_mask = vad_mask[:nsamples]
         else:
-            vad_mask = np.append(vad_mask,
-                                 np.zeros(nsamples - len(vad_mask))
-                                    .astype(np.bool))
-        signal = signal[:,vad_mask]
+            vad_mask = np.append(
+                vad_mask,
+                np.zeros(nsamples - len(vad_mask)).astype(np.bool))
+        signal = signal[:, vad_mask]
     return np.einsum('ct,ct->c', signal, signal) / float(nsamples)
+
 
 def power_avg(signal, vad_mask=None, vad_size=1):
     """Average (accros channels) power
@@ -212,6 +224,7 @@ def power_avg(signal, vad_mask=None, vad_size=1):
     """
     return np.mean(power(signal, vad_mask, vad_size))
 
+
 def power_db(signal, vad_mask=None, vad_size=1):
     """Power in dB
 
@@ -226,6 +239,7 @@ def power_db(signal, vad_mask=None, vad_size=1):
     """
     return 10.0 * np.log10(power(signal, vad_mask, vad_size))
 
+
 def power_avg_db(signal, vad_mask=None, vad_size=1):
     """Average (accros channels) power in dB
 
@@ -239,6 +253,7 @@ def power_avg_db(signal, vad_mask=None, vad_size=1):
         power    : average power of all channels.
     """
     return 10.0 * np.log10(power_avg(signal, vad_mask, vad_size))
+
 
 def power_tf(tf):
     """Compute power of time-frequency domain signal
@@ -258,6 +273,7 @@ def power_tf(tf):
         nch, nt, nf = tf.shape
         return np.einsum('ctf,ctf->c', tf, tf.conj()).real / float(nt * nf)
 
+
 def snr(sandn, noise):
     """Signal-to-noise ratio given signal with noise and noise
 
@@ -271,6 +287,7 @@ def snr(sandn, noise):
     pnos = power(noise)
     psig = power(sandn) - pnos
     return 10 * np.log10(psig / pnos)
+
 
 def steering_vector(delay, win_size=0, fbins=None, fs=None):
     """Compute the steering vector.
@@ -293,10 +310,11 @@ def steering_vector(delay, win_size=0, fbins=None, fs=None):
     assert (win_size != 0) != (fbins is not None)
     delay = np.asarray(delay)
     if fs is not None:
-        delay *= fs      # to discrete-time value
+        delay *= fs  # to discrete-time value
     if fbins is None:
         fbins = np.fft.fftfreq(win_size)
     return np.exp(-2j * math.pi * np.outer(delay, fbins))
+
 
 def compute_delay(m_pos, doa, c=340, fs=None):
     """Compute delay of signal arrival at microphones.
@@ -322,17 +340,18 @@ def compute_delay(m_pos, doa, c=340, fs=None):
 
     # inner product -> different in time
     if doa.ndim == 1:
-        doa /= np.sqrt(np.sum(doa ** 2.0))                          # normalize
+        doa /= np.sqrt(np.sum(doa**2.0))  # normalize
         diff = -np.einsum('ij,j->i', r_pos, doa) / c
     else:
         assert doa.ndim == 2
-        doa /= np.sqrt(np.sum(doa ** 2.0, axis=1, keepdims=True))   # normalize
+        doa /= np.sqrt(np.sum(doa**2.0, axis=1, keepdims=True))  # normalize
         diff = -np.einsum('ij,kj->ki', r_pos, doa) / c
 
     if fs is not None:
         return diff * fs
     else:
         return diff
+
 
 def mel(f):
     """Mel function
@@ -345,6 +364,7 @@ def mel(f):
     """
     return 1125.0 * np.log(1.0 + f / 700.0)
 
+
 def mel_inv(m):
     """inverse mel function
 
@@ -355,6 +375,7 @@ def mel_inv(m):
         f : frequency in Hz
     """
     return 700.0 * (np.exp(m / 1125.0) - 1.0)
+
 
 def mel_freq_fbank_weight(n, freq, fs, fmax=None, fmin=0.0):
     """Mel-freqency filter banks weights
@@ -383,11 +404,11 @@ def mel_freq_fbank_weight(n, freq, fs, fmax=None, fmin=0.0):
     # per bank
     for i in range(n):
         # left slope
-        left = (freq - fls[i]) / (fls[i+1] - fls[i])
+        left = (freq - fls[i]) / (fls[i + 1] - fls[i])
         left[left < 0.0] = 0.0
         left[left > 1.0] = 0.0
         # right slope
-        right = (fls[i + 2] - freq) / (fls[i+2] - fls[i+1])
+        right = (fls[i + 2] - freq) / (fls[i + 2] - fls[i + 1])
         right[right < 0.0] = 0.0
         right[right >= 1.0] = 0.0
         # sum
@@ -396,6 +417,7 @@ def mel_freq_fbank_weight(n, freq, fs, fmax=None, fmin=0.0):
     assert np.min(fbw) == 0.0
     assert np.max(fbw) <= 1.0
     return fbw
+
 
 def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
     """Voice Activity Detection by threshold
@@ -412,9 +434,10 @@ def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
     """
     nch, nsamples = sig.shape
     nframes = nsamples * vadrate / fs
-    fpower = np.zeros((nch, nframes)) # power at frame level
+    fpower = np.zeros((nch, nframes))  # power at frame level
     for i in range(nframes):
-        fpower[:, i] = power(sig[:, (i*fs/vadrate):((i+1)*fs/vadrate)])
+        fpower[:, i] = power(sig[:,
+                                 (i * fs / vadrate):((i + 1) * fs / vadrate)])
 
     # average power in neighbor area
     if neighbor_size == 0:
@@ -422,10 +445,13 @@ def vad_by_threshold(fs, sig, vadrate, threshold_db, neighbor_size=0):
     else:
         apower = np.zeros((nch, nframes))
         for i in range(nframes):
-            apower[:, i] = np.mean(fpower[:, max(0,i-neighbor_size):
-                                          min(nframes,i+neighbor_size+1)],
-                                   axis=1)
-    return (apower > 10.0 ** (threshold_db / 10.0)).astype(int)
+            apower[:, i] = np.mean(
+                fpower[:,
+                       max(0, i - neighbor_size):min(nframes, i +
+                                                     neighbor_size + 1)],
+                axis=1)
+    return (apower > 10.0**(threshold_db / 10.0)).astype(int)
+
 
 def cov_matrix(tf):
     """Covariance matrix of the  multi-channel signal.
@@ -438,6 +464,7 @@ def cov_matrix(tf):
     """
     nch, nframe, nfbin = tf.shape
     return np.einsum('itf,jtf->ijf', tf, tf.conj()) / float(nframe)
+
 
 def empirical_cov_mat(tf, tw=2, fw=2):
     """Empirical covariance matrix
@@ -459,18 +486,20 @@ def empirical_cov_mat(tf, tw=2, fw=2):
 
     # apply windowing by convolution
     # compute convolution window
-    kernel = np.einsum('t,f->tf', np.hanning(tw * 2 + 1)[1:-1],
+    kernel = np.einsum('t,f->tf',
+                       np.hanning(tw * 2 + 1)[1:-1],
                        np.hanning(fw * 2 + 1)[1:-1])
-    kernel = kernel / np.sum(kernel)    # normalize
+    kernel = kernel / np.sum(kernel)  # normalize
 
     # apply to each channel pair
     ecov = np.zeros(cov.shape, dtype=cov.dtype)
     for i in range(len(tf)):
         for j in range(len(tf)):
-            rpart = _apply_conv(cov[i,j,:,:].real, kernel, mode='nearest')
-            ipart = _apply_conv(cov[i,j,:,:].imag, kernel, mode='nearest')
-            ecov[i,j,:,:] = rpart + 1j * ipart
+            rpart = _apply_conv(cov[i, j, :, :].real, kernel, mode='nearest')
+            ipart = _apply_conv(cov[i, j, :, :].imag, kernel, mode='nearest')
+            ecov[i, j, :, :] = rpart + 1j * ipart
     return ecov
+
 
 def empirical_cov_mat_by_block(tf, block_size, block_hop):
     """Empirical covariance matrix by blocks
@@ -489,11 +518,13 @@ def empirical_cov_mat_by_block(tf, block_size, block_hop):
     cov = np.einsum('ctf,dtf->cdtf', tf, tf.conj())
 
     # average in blocks
-    ecov = [np.mean(cov[:,:,t:t+block_size], axis=2)
-                for t in range(0, nframe - block_size + 1, block_hop)]
+    ecov = [
+        np.mean(cov[:, :, t:t + block_size], axis=2)
+        for t in range(0, nframe - block_size + 1, block_hop)
+    ]
     ecov = np.moveaxis(np.asarray(ecov), 0, 2)
     return ecov
 
+
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
-
