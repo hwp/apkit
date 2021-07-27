@@ -122,9 +122,9 @@ def stft(signal, window, win_size, hop_size, last_sample=False):
 
     Args:
         signal   : multi-channel time-domain signal
-        window   : window function, see cola_hamming as example.
-        win_size : window size
-        hop_size : hop size
+        window   : window function, see cola_hamming as an example.
+        win_size : window size (number of samples)
+        hop_size : hop size (number of samples)
         last_sample : include last sample, by default (due to legacy bug),
                       the last sample is not included.
 
@@ -145,7 +145,7 @@ def istft(tf, hop_size):
 
     Args:
         tf       : multi-channel time-frequency domain signal.
-        hop_size : hop size
+        hop_size : hop size (number of samples)
 
     Returns:
         signal   : multi-channel time-domain signal

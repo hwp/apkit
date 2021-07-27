@@ -76,7 +76,7 @@ def plot_cc(fs, pw_cc, hop_size, ch_names=None, zoom=None, upsample=1):
         cc = pw_cc[k]
         sp = fig.add_subplot(len(pw_cc), 1, i + 1)
         _, nfft = cc.shape
-        ny = nfft / 2 + 1
+        ny = nfft // 2 + 1
         assert zoom < ny
 
         if zoom is None:
