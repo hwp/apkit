@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='apkit',
-    version='0.3.1',
+    version='0.3.2',
     author='Weipeng He',
     author_email='heweipeng@gmail.com',
     description='Python Audio Processing Kit',
