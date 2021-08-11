@@ -1,6 +1,8 @@
 from .basic import load_wav, load_metadata, save_wav, \
                    stft, istft, cola_hamming, cola_rectangle, \
                    freq_upsample, power, power_db, power_avg, power_avg_db, \
+                   frame_power, frame_power_db, frame_power_avg, \
+                   frame_power_avg_db, \
                    power_tf, snr, \
                    steering_vector, compute_delay, \
                    mel, mel_inv, mel_freq_fbank_weight, \

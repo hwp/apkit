@@ -274,6 +274,66 @@ def power_tf(tf):
         return np.einsum('ctf,ctf->c', tf, tf.conj()).real / float(nt * nf)
 
 
+def frame_power(signal, win_size, hop_size):
+    """Compute frame-level power of a time-domain signal
+
+    Args:
+        signal   : multi-channel time-domain signal
+        win_size : window size (number of samples)
+        hop_size : hop size (number of samples)
+
+    Returns:
+        frame_power : frame-level power, indexed by (ct)
+    """
+    sig_len = signal.shape[1]
+    return np.stack([power(signal[:, t:t+win_size]) 
+                        for t in range(0, sig_len - win_size + 1, hop_size)],
+                    axis=1)
+
+def frame_power_db(signal, win_size, hop_size):
+    """Compute frame-level power of a time-domain signal
+
+    Args:
+        signal   : multi-channel time-domain signal
+        win_size : window size (number of samples)
+        hop_size : hop size (number of samples)
+
+    Returns:
+        frame_power : frame-level power in dB, indexed by (ct)
+    """
+    return 10.0 * np.log10(frame_power(signal, win_size, hop_size))
+
+
+def frame_power_avg(signal, win_size, hop_size):
+    """Compute frame-level power of a time-domain signal
+
+    Args:
+        signal   : multi-channel time-domain signal
+        win_size : window size (number of samples)
+        hop_size : hop size (number of samples)
+
+    Returns:
+        frame_power : frame-level power averaged across channels,
+                      indexed by (t)
+    """
+    return np.mean(frame_power(signal, win_size, hop_size), axis=0)
+
+
+def frame_power_avg_db(signal, win_size, hop_size):
+    """Compute frame-level power of a time-domain signal
+
+    Args:
+        signal   : multi-channel time-domain signal
+        win_size : window size (number of samples)
+        hop_size : hop size (number of samples)
+
+    Returns:
+        frame_power : frame-level power in dB averaged across channels,
+                      indexed by (t)
+    """
+    return 10.0 * np.log10(frame_power_avg(signal, win_size, hop_size))
+
+
 def snr(sandn, noise):
     """Signal-to-noise ratio given signal with noise and noise
 
