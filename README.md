@@ -101,6 +101,8 @@ The functions of this library are listed (not exhaustively) in the following tab
 | `merge_lm_on_azimuth` | Merge local maxima with same azimuth        |
 | `vec2ae`              | Unit vector to azimuth-elevation conversion |
 
+> **Example**: `examples/angular_spec_doa.py`
+
 Contact
 -------
 

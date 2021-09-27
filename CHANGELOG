@@ -1,5 +1,6 @@
 current version
   * add frame-level power
+  # add example of angular spectrum-based DOA estimation
 
 version 0.3.2
   * fix problem of python 2 divide '/'
