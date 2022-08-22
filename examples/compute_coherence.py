@@ -20,7 +20,7 @@ def main(infile, outfile, win_size, plot_title, plot_max_freq):
         for j in range(i + 1, n_ch):
             freq_bins, coherence, psd_x, psd_y = _complex_coherence(sig[i], sig[j], 
                                                       win_size=win_size, fs=fs)
-            with open(f'{outfile}_{i}vs{j}', 'w') as f:
+            with open(f'{outfile}_{i+1}vs{j+1}', 'w') as f:
                 for freq, c, p, q in zip(freq_bins, coherence, psd_x, psd_y):
                     print(f'{freq}\t{c.real}\t{c.imag}\t{p}\t{q}', file=f)
 
@@ -31,22 +31,22 @@ def main(infile, outfile, win_size, plot_title, plot_max_freq):
         print('set samples 500', file=f)
         for i in range(n_ch - 1):
             for j in range(i + 1, n_ch):
-                print(f'set title "{plot_title} -- ch{i} vs ch{j}"', file=f)
-                print(f'set output "{outfile}_{i}vs{j}.png"', file=f)
+                print(f'set title "{plot_title} -- ch{i+1} vs ch{j+1}"', file=f)
+                print(f'set output "{outfile}_{i+1}vs{j+1}.png"', file=f)
                 print('set multiplot layout 2,1', file=f)
                 print('unset xlabel', file=f)
-                print('set yrange [-.4:1]', file=f)
+                print('set yrange [-1:1]', file=f)
                 print('set ylabel "Coherence"', file=f)
-                print(f'plot "{outfile}_{i}vs{j}" u 1:2 smooth csplines w l lc rgb "#2000ff00" title "Real", '
+                print(f'plot "{outfile}_{i+1}vs{j+1}" u 1:2 smooth csplines w l lc rgb "#2000ff00" title "Real", '
                             '"" u 1:3 smooth csplines w l lc rgb "#20ff0000" title "Imaginary", '
                             '"" u 1:(sqrt($2**2+$3**2)) smooth csplines w l lc rgb "#200000ff" dt "." title "Magnitude"',
                       file=f)
-                print('set title "PSD"', file=f)
-                print('set xlabel "Frequency"', file=f)
+                print('unset title', file=f)
+                print('set xlabel "Frequency (Hz)"', file=f)
                 print('unset yrange', file=f)
                 print('set ylabel "PSD (dB)"', file=f)
-                print(f'plot "{outfile}_{i}vs{j}" u 1:(10.0*log10($4)) smooth csplines w l lc rgb "#2000ff00" title "ch{i}", '
-                            f'"" u 1:(10.0*log10($5)) smooth csplines w l lc rgb "#20ff0000" title "ch{j}"',
+                print(f'plot "{outfile}_{i+1}vs{j+1}" u 1:(10.0*log10($4)) smooth csplines w l lc rgb "#2000ff00" title "ch{i+1}", '
+                            f'"" u 1:(10.0*log10($5)) smooth csplines w l lc rgb "#20ff0000" title "ch{j+1}"',
                       file=f)
                 print('unset multiplot', file=f)
 
